@@ -2,23 +2,45 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { createDailyMenu, addMenuItem, deleteMenuItem, getMenuItems } from "@/lib/supabase-helpers";
+import { parseMenuText } from "@/lib/menu-parser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Plus, Trash2, CalendarDays } from "lucide-react";
+import { Trash2, CalendarDays, Upload, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const SAMPLE_MENU = `BUENOS DIAS
+
+MENU
+SOPA CONCHAS
+PRINCIPIO arveja o ensalada rusa
+PROTEÍNAS
+albondigas. $14000
+pollo apanado. $14000
+pollo sudado $14000
+pechuga plancha. $14000
+carne plancha $14000
+lomo BBQ. $14000
+carne sudada. $14000
+hígado bistec $14000
+ESPECIALES
+Arroz pollo 16000
+Sobre barriga. $19000
+Róbalo. 18000
+Mojarra. $19000`;
 
 export default function AdminMenuManager() {
   const queryClient = useQueryClient();
   const today = new Date().toISOString().split('T')[0];
   const [selectedDate, setSelectedDate] = useState(today);
-  const [greeting, setGreeting] = useState("Buenos días");
+  const [menuText, setMenuText] = useState("");
+  const [importing, setImporting] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [newItemType, setNewItemType] = useState<string>("proteina");
   const [newItemPrice, setNewItemPrice] = useState("");
-  const [creating, setCreating] = useState(false);
 
   const { data: menu, isLoading } = useQuery({
     queryKey: ['adminMenu', selectedDate],
@@ -38,16 +60,55 @@ export default function AdminMenuManager() {
     enabled: !!menu?.id,
   });
 
-  const handleCreateMenu = async () => {
-    setCreating(true);
-    try {
-      await createDailyMenu(selectedDate, greeting);
-      queryClient.invalidateQueries({ queryKey: ['adminMenu', selectedDate] });
-      toast.success("Menú creado");
-    } catch (e: any) {
-      toast.error(e.message || "Error creando menú");
+  const handleBulkImport = async () => {
+    if (!menuText.trim()) {
+      toast.error("Pega el menú del día en el campo de texto");
+      return;
     }
-    setCreating(false);
+
+    setImporting(true);
+    try {
+      const parsed = parseMenuText(menuText);
+
+      if (parsed.items.length === 0) {
+        toast.error("No se encontraron items en el texto");
+        setImporting(false);
+        return;
+      }
+
+      // Create or reuse menu
+      let menuId = menu?.id;
+      if (!menuId) {
+        const newMenu = await createDailyMenu(selectedDate, parsed.greeting);
+        menuId = newMenu.id;
+      }
+
+      // Delete existing items if menu already existed
+      if (menu?.id && items?.length) {
+        for (const item of items) {
+          await deleteMenuItem(item.id);
+        }
+      }
+
+      // Insert all parsed items
+      for (const item of parsed.items) {
+        await addMenuItem({
+          menu_id: menuId,
+          type: item.type,
+          name: item.name,
+          price: item.price,
+        });
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['adminMenu', selectedDate] });
+      queryClient.invalidateQueries({ queryKey: ['adminMenuItems'] });
+      queryClient.invalidateQueries({ queryKey: ['menuItems'] });
+      toast.success(`Menú importado: ${parsed.items.length} items`);
+      setMenuText("");
+    } catch (e: any) {
+      toast.error(e.message || "Error importando menú");
+    }
+    setImporting(false);
   };
 
   const handleAddItem = async () => {
@@ -100,38 +161,46 @@ export default function AdminMenuManager() {
 
   return (
     <div className="space-y-6">
-      {/* Date selection */}
+      {/* Date + Bulk Import */}
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-sans flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" /> Gestionar Menú
+            <CalendarDays className="h-5 w-5 text-primary" /> Cargar Menú del Día
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              <Label>Fecha</Label>
-              <Input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
-            </div>
-            <div className="flex-1">
-              <Label>Saludo</Label>
-              <Input value={greeting} onChange={e => setGreeting(e.target.value)} placeholder="Buenos días" />
-            </div>
+          <div>
+            <Label>Fecha</Label>
+            <Input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
           </div>
-          {!menu && !isLoading && (
-            <Button onClick={handleCreateMenu} disabled={creating} className="w-full">
-              {creating ? "Creando..." : "Crear Menú para este día"}
-            </Button>
-          )}
+
+          <div>
+            <Label>Pegar menú completo</Label>
+            <Textarea
+              value={menuText}
+              onChange={e => setMenuText(e.target.value)}
+              placeholder={SAMPLE_MENU}
+              className="min-h-[250px] font-mono text-sm"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Pega el menú tal como lo recibes. Se detectarán automáticamente las sopas, principios, proteínas y especiales con sus precios.
+            </p>
+          </div>
+
+          <Button onClick={handleBulkImport} disabled={importing || !menuText.trim()} className="w-full">
+            <Upload className="h-4 w-4 mr-2" />
+            {importing ? "Importando..." : menu ? "Reemplazar menú" : "Crear menú"}
+          </Button>
+
           {menu && <p className="text-sm text-success font-medium">✓ Menú activo para {selectedDate}</p>}
         </CardContent>
       </Card>
 
-      {/* Add items */}
+      {/* Add single item */}
       {menu && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-sans">Agregar Item</CardTitle>
+            <CardTitle className="text-lg font-sans">Agregar Item Individual</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex gap-3 items-end flex-wrap">
