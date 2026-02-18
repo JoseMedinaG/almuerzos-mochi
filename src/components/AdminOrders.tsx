@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, ClipboardList } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Download, ClipboardList, FileText, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 
 export default function AdminOrders() {
   const today = new Date().toISOString().split('T')[0];
+  const [showOrderSummary, setShowOrderSummary] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [selectedDate, setSelectedDate] = useState(today);
 
   const { data: menu } = useQuery({
@@ -60,6 +64,42 @@ export default function AdminOrders() {
     URL.revokeObjectURL(url);
   };
 
+  const generateOrderSummary = () => {
+    if (!orders?.length) return "";
+    const lines: Record<string, number> = {};
+    let totalSoups = 0;
+
+    for (const o of orders) {
+      const itemName = (o.special as any)?.name || (o.protein as any)?.name || "Sin proteína";
+      const sideName = (o.side as any)?.name;
+      const sideText = sideName ? `con ${sideName}` : "sin principio";
+      
+      let extras: string[] = [];
+      if (o.wants_salad === false) extras.push("sin ensalada");
+      if (o.notes) extras.push(o.notes);
+
+      let line = `${itemName} ${(o.special as any)?.name ? '' : sideText}`.trim();
+      if (extras.length) line += ` ${extras.join(', ')}`;
+
+      lines[line] = (lines[line] || 0) + 1;
+      if (o.wants_soup) totalSoups++;
+    }
+
+    const result = Object.entries(lines)
+      .map(([desc, qty]) => `${qty} ${desc}`)
+      .join('\n');
+
+    return totalSoups > 0 ? `${result}\n\n${totalSoups} Sopa` : result;
+  };
+
+  const handleCopySummary = async () => {
+    const text = generateOrderSummary();
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success("Pedido copiado al portapapeles");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
 
   return (
@@ -79,7 +119,26 @@ export default function AdminOrders() {
             <Button variant="outline" onClick={exportCSV} disabled={!orders?.length} className="gap-2">
               <Download className="h-4 w-4" /> Exportar CSV
             </Button>
+            <Button onClick={() => setShowOrderSummary(true)} disabled={!orders?.length} className="gap-2">
+              <FileText className="h-4 w-4" /> Generar Pedido
+            </Button>
           </div>
+
+          <Dialog open={showOrderSummary} onOpenChange={setShowOrderSummary}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Pedido del día - {selectedDate}</DialogTitle>
+                <DialogDescription>Resumen listo para copiar</DialogDescription>
+              </DialogHeader>
+              <pre className="whitespace-pre-wrap text-sm bg-secondary/30 rounded-lg p-4 max-h-[400px] overflow-y-auto font-sans">
+                {generateOrderSummary() || "No hay pedidos"}
+              </pre>
+              <Button onClick={handleCopySummary} className="w-full gap-2">
+                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {copied ? "¡Copiado!" : "Copiar al portapapeles"}
+              </Button>
+            </DialogContent>
+          </Dialog>
 
           {!menu && <p className="text-muted-foreground">No hay menú para esta fecha.</p>}
 
