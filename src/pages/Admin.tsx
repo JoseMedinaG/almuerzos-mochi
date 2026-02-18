@@ -16,6 +16,7 @@ export default function Admin() {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -71,7 +72,7 @@ export default function Admin() {
             Panel Admin
           </h1>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => window.open('/', '_blank')} className="gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/')} className="gap-2">
               <ShoppingBag className="h-4 w-4" /> Hacer pedido
             </Button>
             <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); toast.info("Sesión cerrada"); }}>
