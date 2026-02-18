@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { checkIsAdmin } from "@/lib/supabase-helpers";
@@ -7,7 +8,7 @@ import AdminMenuManager from "@/components/AdminMenuManager";
 import AdminOrders from "@/components/AdminOrders";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogOut, UtensilsCrossed, ClipboardList } from "lucide-react";
+import { LogOut, UtensilsCrossed, ClipboardList, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import type { Session } from "@supabase/supabase-js";
 
@@ -69,9 +70,14 @@ export default function Admin() {
             <UtensilsCrossed className="h-5 w-5 text-primary" />
             Panel Admin
           </h1>
-          <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); toast.info("Sesión cerrada"); }}>
-            <LogOut className="h-4 w-4 mr-2" /> Salir
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => window.open('/', '_blank')} className="gap-2">
+              <ShoppingBag className="h-4 w-4" /> Hacer pedido
+            </Button>
+            <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); toast.info("Sesión cerrada"); }}>
+              <LogOut className="h-4 w-4 mr-2" /> Salir
+            </Button>
+          </div>
         </div>
       </header>
 
