@@ -47,7 +47,7 @@ export function parseMenuText(text: string): ParsedMenu {
       const sideName = line.replace(/^principio\s*/i, '').trim();
       if (sideName) {
         // Could be multiple sides separated by " o "
-        const sides = sideName.split(/\s+o\s+/i);
+        const sides = sideName.split(/\s*,\s*|\s+o\s+/i);
         for (const side of sides) {
           if (side.trim()) {
             items.push({ type: 'principio', name: side.trim() });
