@@ -111,17 +111,19 @@ export default function AdminOrders() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 items-end mb-4">
-            <div>
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end mb-4">
+            <div className="min-w-[150px]">
               <Label>Fecha</Label>
               <Input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
             </div>
-            <Button variant="outline" onClick={exportCSV} disabled={!orders?.length} className="gap-2">
-              <Download className="h-4 w-4" /> Exportar CSV
-            </Button>
-            <Button onClick={() => setShowOrderSummary(true)} disabled={!orders?.length} className="gap-2">
-              <FileText className="h-4 w-4" /> Generar Pedido
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" onClick={exportCSV} disabled={!orders?.length} className="gap-2 flex-1 sm:flex-auto text-xs sm:text-sm">
+                <Download className="h-4 w-4 shrink-0" /> CSV
+              </Button>
+              <Button onClick={() => setShowOrderSummary(true)} disabled={!orders?.length} className="gap-2 flex-1 sm:flex-auto text-xs sm:text-sm">
+                <FileText className="h-4 w-4 shrink-0" /> Generar Pedido
+              </Button>
+            </div>
           </div>
 
           <Dialog open={showOrderSummary} onOpenChange={setShowOrderSummary}>
