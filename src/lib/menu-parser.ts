@@ -78,7 +78,7 @@ export function parseMenuText(text: string): ParsedMenu {
 
 function parseItemLine(line: string): { name: string; price?: number } {
   // Remove leading dots, dashes, bullets
-  let cleaned = line.replace(/^[\-•*]+\s*/, '').trim();
+  let cleaned = line.replace(/\*/g, '').replace(/^[\-•]+\s*/, '').trim();
   
   // Extract price: patterns like "$14000", "$14.000", "14000", "$19.000"
   const priceMatch = cleaned.match(/\$?\s*([\d]+[.,]?\d*)\s*$/);
