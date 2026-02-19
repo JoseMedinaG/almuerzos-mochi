@@ -71,7 +71,18 @@ export function parseMenuText(text: string): ParsedMenu {
     if (currentSection !== 'none') {
       const { name, price } = parseItemLine(line);
       if (name) {
-        items.push({ type: currentSection, name, price });
+        // Split principio items by comma or "o"
+        if (currentSection === 'principio' && /\s*,\s*|\s+o\s+/i.test(name)) {
+          const sides = name.split(/\s*,\s*|\s+o\s+/i);
+          for (const side of sides) {
+            const trimmed = side.trim();
+            if (trimmed) {
+              items.push({ type: 'principio', name: trimmed, price });
+            }
+          }
+        } else {
+          items.push({ type: currentSection, name, price });
+        }
       }
     }
   }
