@@ -70,8 +70,8 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
         customer_phone: customerPhone.trim() || undefined,
         protein_id: isSpecialOrder ? undefined : selectedProtein || undefined,
         side_id: isSpecialOrder ? undefined : selectedSide || undefined,
-        wants_soup: isSpecialOrder ? false : wantsSoup,
-        soup_id: isSpecialOrder ? undefined : (wantsSoup ? selectedSoup || undefined : undefined),
+        wants_soup: wantsSoup,
+        soup_id: wantsSoup ? selectedSoup || undefined : undefined,
         wants_salad: isSpecialOrder ? false : wantsSalad,
         special_id: selectedSpecial || undefined,
         notes: notes.trim() || undefined,
@@ -130,7 +130,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
           <CardContent>
             <RadioGroup value={selectedSpecial} onValueChange={(val) => {
               setSelectedSpecial(val);
-              if (val) { setSelectedProtein(""); setSelectedSide(""); setWantsSoup(false); setWantsSalad(false); }
+              if (val) { setSelectedProtein(""); setSelectedSide(""); setWantsSalad(false); }
             }}>
               {specials.map(item => (
                 <div key={item.id} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-secondary/50 transition-colors">
@@ -152,6 +152,34 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
       )}
 
       {/* Regular menu */}
+      {/* Soup - available for both regular and special orders */}
+      {soups.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg font-sans font-semibold flex items-center gap-2">
+              <Soup className="h-5 w-5 text-warm-gold" />
+              Sopa
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Checkbox id="wants-soup" checked={wantsSoup} onCheckedChange={(c) => { setWantsSoup(!!c); if (!c) setSelectedSoup(""); }} />
+              <Label htmlFor="wants-soup" className="cursor-pointer">¿Deseas sopa?</Label>
+            </div>
+            {wantsSoup && (
+              <RadioGroup value={selectedSoup} onValueChange={setSelectedSoup}>
+                {soups.map(item => (
+                  <div key={item.id} className="flex items-center gap-3 py-1 px-3">
+                    <RadioGroupItem value={item.id} id={`soup-${item.id}`} />
+                    <Label htmlFor={`soup-${item.id}`} className="cursor-pointer">{item.name}</Label>
+                  </div>
+                ))}
+              </RadioGroup>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {!isSpecialOrder && (
         <>
           {/* Proteins */}
@@ -201,33 +229,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
             </Card>
           )}
 
-          {/* Soup */}
-          {soups.length > 0 && (
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg font-sans font-semibold flex items-center gap-2">
-                  <Soup className="h-5 w-5 text-warm-gold" />
-                  Sopa
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <Checkbox id="wants-soup" checked={wantsSoup} onCheckedChange={(c) => { setWantsSoup(!!c); if (!c) setSelectedSoup(""); }} />
-                  <Label htmlFor="wants-soup" className="cursor-pointer">¿Deseas sopa?</Label>
-                </div>
-                {wantsSoup && (
-                  <RadioGroup value={selectedSoup} onValueChange={setSelectedSoup}>
-                    {soups.map(item => (
-                      <div key={item.id} className="flex items-center gap-3 py-1 px-3">
-                        <RadioGroupItem value={item.id} id={`soup-${item.id}`} />
-                        <Label htmlFor={`soup-${item.id}`} className="cursor-pointer">{item.name}</Label>
-                      </div>
-                    ))}
-                  </RadioGroup>
-                )}
-              </CardContent>
-            </Card>
-          )}
+          
 
           {/* Salad */}
           <Card>
