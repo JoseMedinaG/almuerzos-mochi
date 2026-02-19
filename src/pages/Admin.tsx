@@ -71,12 +71,12 @@ export default function Admin() {
             <UtensilsCrossed className="h-5 w-5 text-primary" />
             Panel Admin
           </h1>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate('/')} className="gap-2">
-              <ShoppingBag className="h-4 w-4" /> Hacer pedido
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Button variant="outline" size="sm" onClick={() => navigate('/')} className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+              <ShoppingBag className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Hacer</span> Pedido
             </Button>
-            <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); toast.info("Sesión cerrada"); }}>
-              <LogOut className="h-4 w-4 mr-2" /> Salir
+            <Button variant="ghost" size="sm" onClick={async () => { await supabase.auth.signOut(); toast.info("Sesión cerrada"); }} className="px-2 sm:px-3">
+              <LogOut className="h-4 w-4" /> <span className="hidden sm:inline ml-1">Salir</span>
             </Button>
           </div>
         </div>
