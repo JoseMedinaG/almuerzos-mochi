@@ -18,7 +18,7 @@ export function parseMenuText(text: string): ParsedMenu {
 
   for (let line of lines) {
     // Remove asterisks early so section headers are detected correctly
-    line = line.replace(/\*/g, '').trim();
+    line = line.replace(/[\*\-•]+/g, ' ').replace(/\s+/g, ' ').trim();
     if (!line) continue;
     const upper = line.toUpperCase();
 
