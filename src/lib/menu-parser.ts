@@ -16,7 +16,10 @@ export function parseMenuText(text: string): ParsedMenu {
   const items: ParsedMenuItem[] = [];
   let currentSection: 'none' | 'sopa' | 'principio' | 'proteina' | 'especial' = 'none';
 
-  for (const line of lines) {
+  for (let line of lines) {
+    // Remove asterisks early so section headers are detected correctly
+    line = line.replace(/\*/g, '').trim();
+    if (!line) continue;
     const upper = line.toUpperCase();
 
     // Detect greeting (first line usually)
