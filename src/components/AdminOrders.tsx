@@ -72,8 +72,8 @@ export default function AdminOrders() {
 
     for (const o of orders) {
       const isSpecial = !!(o.special as any)?.name;
-      const itemName = (o.special as any)?.name || (o.protein as any)?.name || "Sin proteína";
-      const sideName = (o.side as any)?.name;
+      const itemName = ((o.special as any)?.name || (o.protein as any)?.name || "Sin proteína").toLowerCase();
+      const sideName = (o.side as any)?.name?.toLowerCase();
       const sideText = sideName ? `con ${sideName}` : "sin principio";
       
       let extras: string[] = [];
