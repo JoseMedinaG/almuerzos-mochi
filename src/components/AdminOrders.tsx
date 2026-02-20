@@ -71,15 +71,16 @@ export default function AdminOrders() {
     let totalSoups = 0;
 
     for (const o of orders) {
+      const isSpecial = !!(o.special as any)?.name;
       const itemName = (o.special as any)?.name || (o.protein as any)?.name || "Sin proteína";
       const sideName = (o.side as any)?.name;
       const sideText = sideName ? `con ${sideName}` : "sin principio";
       
       let extras: string[] = [];
-      if (o.wants_salad === false) extras.push("sin ensalada");
+      if (!isSpecial && o.wants_salad === false) extras.push("sin ensalada");
       if (o.notes) extras.push(o.notes);
 
-      let line = `${itemName} ${(o.special as any)?.name ? '' : sideText}`.trim();
+      let line = `${itemName} ${isSpecial ? '' : sideText}`.trim();
       if (extras.length) line += ` ${extras.join(', ')}`;
 
       lines[line] = (lines[line] || 0) + 1;
