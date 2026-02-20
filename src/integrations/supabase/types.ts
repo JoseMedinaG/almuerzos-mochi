@@ -81,6 +81,7 @@ export type Database = {
           id: string
           menu_id: string
           notes: string | null
+          payment_method: string
           protein_id: string | null
           side_id: string | null
           soup_id: string | null
@@ -96,6 +97,7 @@ export type Database = {
           id?: string
           menu_id: string
           notes?: string | null
+          payment_method?: string
           protein_id?: string | null
           side_id?: string | null
           soup_id?: string | null
@@ -111,6 +113,7 @@ export type Database = {
           id?: string
           menu_id?: string
           notes?: string | null
+          payment_method?: string
           protein_id?: string | null
           side_id?: string | null
           soup_id?: string | null

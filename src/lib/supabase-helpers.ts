@@ -36,6 +36,7 @@ export async function createOrder(order: {
   special_id?: string;
   notes?: string;
   total_price: number;
+  payment_method: "efectivo" | "nequi";
 }) {
   const { data, error } = await supabase
     .from('orders')

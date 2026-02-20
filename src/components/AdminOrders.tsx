@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Download, ClipboardList, FileText, Copy, Check } from "lucide-react";
+import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminOrders() {
@@ -41,7 +41,7 @@ export default function AdminOrders() {
 
   const exportCSV = () => {
     if (!orders?.length) return;
-    const headers = ['Nombre', 'Teléfono', 'Proteína', 'Principio', 'Sopa', 'Ensalada', 'Especial', 'Notas', 'Total', 'Hora'];
+    const headers = ['Nombre', 'Teléfono', 'Proteína', 'Principio', 'Sopa', 'Ensalada', 'Especial', 'Notas', 'Pago', 'Total', 'Hora'];
     const rows = orders.map(o => [
       o.customer_name,
       o.customer_phone || '',
@@ -51,6 +51,7 @@ export default function AdminOrders() {
       o.wants_salad ? 'Sí' : 'No',
       (o.special as any)?.name || '',
       o.notes || '',
+      (o as any).payment_method || 'efectivo',
       o.total_price,
       new Date(o.created_at).toLocaleTimeString('es-CO'),
     ]);
@@ -101,6 +102,8 @@ export default function AdminOrders() {
   };
 
   const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
+  const totalEfectivo = orders?.filter(o => (o as any).payment_method === 'efectivo' || !(o as any).payment_method).reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
+  const totalNequi = orders?.filter(o => (o as any).payment_method === 'nequi').reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
 
   return (
     <div className="space-y-6">
@@ -146,7 +149,7 @@ export default function AdminOrders() {
 
           {menu && (
             <div className="space-y-4">
-              <div className="flex gap-6 text-sm">
+              <div className="flex gap-4 text-sm flex-wrap">
                 <div className="bg-primary/10 rounded-lg px-4 py-2">
                   <p className="text-muted-foreground">Total pedidos</p>
                   <p className="text-2xl font-bold text-primary">{orders?.length || 0}</p>
@@ -154,6 +157,20 @@ export default function AdminOrders() {
                 <div className="bg-accent/10 rounded-lg px-4 py-2">
                   <p className="text-muted-foreground">Total ventas</p>
                   <p className="text-2xl font-bold text-accent">{formatPrice(totalRevenue)}</p>
+                </div>
+                <div className="bg-green-500/10 rounded-lg px-4 py-2 flex items-center gap-2">
+                  <Banknote className="h-4 w-4 text-green-600" />
+                  <div>
+                    <p className="text-muted-foreground">Efectivo</p>
+                    <p className="text-xl font-bold text-green-600">{formatPrice(totalEfectivo)}</p>
+                  </div>
+                </div>
+                <div className="bg-purple-500/10 rounded-lg px-4 py-2 flex items-center gap-2">
+                  <Smartphone className="h-4 w-4 text-purple-600" />
+                  <div>
+                    <p className="text-muted-foreground">Nequi</p>
+                    <p className="text-xl font-bold text-purple-600">{formatPrice(totalNequi)}</p>
+                  </div>
                 </div>
               </div>
 
@@ -172,6 +189,7 @@ export default function AdminOrders() {
                         <TableHead>Sopa</TableHead>
                         <TableHead>Ensalada</TableHead>
                         <TableHead>Notas</TableHead>
+                        <TableHead>Pago</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                         <TableHead>Hora</TableHead>
                       </TableRow>
@@ -192,6 +210,12 @@ export default function AdminOrders() {
                           <TableCell>{order.wants_soup ? ((order.soup as any)?.name || 'Sí') : 'No'}</TableCell>
                           <TableCell>{order.wants_salad ? 'Sí' : 'No'}</TableCell>
                           <TableCell className="max-w-[150px] truncate">{order.notes || '-'}</TableCell>
+                          <TableCell>
+                            {(order as any).payment_method === 'nequi'
+                              ? <span className="flex items-center gap-1 text-purple-600 font-medium"><Smartphone className="h-3.5 w-3.5" /> Nequi</span>
+                              : <span className="flex items-center gap-1 text-green-600 font-medium"><Banknote className="h-3.5 w-3.5" /> Efectivo</span>
+                            }
+                          </TableCell>
                           <TableCell className="text-right font-semibold text-primary">{formatPrice(order.total_price)}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">{new Date(order.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</TableCell>
                         </TableRow>

@@ -3,12 +3,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { createOrder } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
-import { UtensilsCrossed, Soup, Salad, Star, Send } from "lucide-react";
+import { UtensilsCrossed, Soup, Salad, Star, Send, Banknote, Smartphone } from "lucide-react";
 
 interface MenuItem {
   id: string;
@@ -32,6 +31,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
   const [wantsSalad, setWantsSalad] = useState(false);
   const [selectedSpecial, setSelectedSpecial] = useState("");
   const [notes, setNotes] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<"efectivo" | "nequi">("efectivo");
   const [submitting, setSubmitting] = useState(false);
 
   const proteins = useMemo(() => items.filter(i => i.type === "proteina"), [items]);
@@ -75,6 +75,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
         special_id: selectedSpecial || undefined,
         notes: notes.trim() || undefined,
         total_price: totalPrice,
+        payment_method: paymentMethod,
       });
       toast.success("¡Pedido realizado con éxito!");
       setCustomerName("");
@@ -255,6 +256,32 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
           </Card>
         </>
       )}
+
+      {/* Payment method */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg font-sans font-semibold flex items-center gap-2">
+            <Banknote className="h-5 w-5 text-primary" />
+            Medio de pago *
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RadioGroup value={paymentMethod} onValueChange={(val) => setPaymentMethod(val as "efectivo" | "nequi")}>
+            <div className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-secondary/50 transition-colors">
+              <RadioGroupItem value="efectivo" id="pay-efectivo" />
+              <Label htmlFor="pay-efectivo" className="cursor-pointer font-medium flex items-center gap-2">
+                <Banknote className="h-4 w-4 text-accent" /> Efectivo
+              </Label>
+            </div>
+            <div className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-secondary/50 transition-colors">
+              <RadioGroupItem value="nequi" id="pay-nequi" />
+              <Label htmlFor="pay-nequi" className="cursor-pointer font-medium flex items-center gap-2">
+                <Smartphone className="h-4 w-4 text-primary" /> Nequi
+              </Label>
+            </div>
+          </RadioGroup>
+        </CardContent>
+      </Card>
 
       {/* Notes */}
       <Card>

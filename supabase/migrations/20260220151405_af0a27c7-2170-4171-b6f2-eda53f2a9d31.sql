@@ -1,0 +1,1 @@
+ALTER TABLE public.orders ADD COLUMN payment_method text NOT NULL DEFAULT 'efectivo' CHECK (payment_method IN ('efectivo', 'nequi'));
