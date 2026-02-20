@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getTodayOrders } from "@/lib/supabase-helpers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone, ChevronDown, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminOrders() {
@@ -16,6 +17,8 @@ export default function AdminOrders() {
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [copied, setCopied] = useState(false);
   const [selectedDate, setSelectedDate] = useState(today);
+  const [updatingPayment, setUpdatingPayment] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: menu } = useQuery({
     queryKey: ['adminOrderMenu', selectedDate],
@@ -100,6 +103,20 @@ export default function AdminOrders() {
     setCopied(true);
     toast.success("Pedido copiado al portapapeles");
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const updatePaymentMethod = async (orderId: string, method: 'efectivo' | 'nequi') => {
+    setUpdatingPayment(orderId);
+    const { error } = await supabase
+      .from('orders')
+      .update({ payment_method: method })
+      .eq('id', orderId);
+    if (error) {
+      toast.error("Error al actualizar el medio de pago");
+    } else {
+      queryClient.invalidateQueries({ queryKey: ['adminOrders', menu?.id] });
+    }
+    setUpdatingPayment(null);
   };
 
   const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
@@ -196,31 +213,69 @@ export default function AdminOrders() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {orders.map(order => (
-                        <TableRow key={order.id}>
-                          <TableCell className="font-medium">
-                            {order.customer_name}
-                            {order.customer_phone && <span className="block text-xs text-muted-foreground">{order.customer_phone}</span>}
-                          </TableCell>
-                          <TableCell>
-                            {(order.special as any)?.name
-                              ? <span className="text-warm-gold font-medium">⭐ {(order.special as any).name}</span>
-                              : (order.protein as any)?.name || '-'}
-                          </TableCell>
-                          <TableCell>{(order.side as any)?.name || '-'}</TableCell>
-                          <TableCell>{order.wants_soup ? ((order.soup as any)?.name || 'Sí') : 'No'}</TableCell>
-                          <TableCell>{order.wants_salad ? 'Sí' : 'No'}</TableCell>
-                          <TableCell className="max-w-[150px] truncate">{order.notes || '-'}</TableCell>
-                          <TableCell>
-                            {(order as any).payment_method === 'nequi'
-                              ? <span className="flex items-center gap-1 text-purple-600 font-medium"><Smartphone className="h-3.5 w-3.5" /> Nequi</span>
-                              : <span className="flex items-center gap-1 text-green-600 font-medium"><Banknote className="h-3.5 w-3.5" /> Efectivo</span>
-                            }
-                          </TableCell>
-                          <TableCell className="text-right font-semibold text-primary">{formatPrice(order.total_price)}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{new Date(order.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</TableCell>
-                        </TableRow>
-                      ))}
+                      {orders.map(order => {
+                        const paymentMethod = (order as any).payment_method || 'efectivo';
+                        const isUpdating = updatingPayment === order.id;
+                        return (
+                          <TableRow key={order.id}>
+                            <TableCell className="font-medium">
+                              {order.customer_name}
+                              {order.customer_phone && <span className="block text-xs text-muted-foreground">{order.customer_phone}</span>}
+                            </TableCell>
+                            <TableCell>
+                              {(order.special as any)?.name
+                                ? <span className="text-warm-gold font-medium">⭐ {(order.special as any).name}</span>
+                                : (order.protein as any)?.name || '-'}
+                            </TableCell>
+                            <TableCell>{(order.side as any)?.name || '-'}</TableCell>
+                            <TableCell>{order.wants_soup ? ((order.soup as any)?.name || 'Sí') : 'No'}</TableCell>
+                            <TableCell>{order.wants_salad ? 'Sí' : 'No'}</TableCell>
+                            <TableCell className="max-w-[150px] truncate">{order.notes || '-'}</TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    className="flex items-center gap-1 text-sm font-medium rounded px-2 py-1 hover:bg-muted transition-colors disabled:opacity-50"
+                                    disabled={isUpdating}
+                                  >
+                                    {isUpdating ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : paymentMethod === 'nequi' ? (
+                                      <Smartphone className="h-3.5 w-3.5 text-purple-600" />
+                                    ) : (
+                                      <Banknote className="h-3.5 w-3.5 text-green-600" />
+                                    )}
+                                    <span className={paymentMethod === 'nequi' ? 'text-purple-600' : 'text-green-600'}>
+                                      {paymentMethod === 'nequi' ? 'Nequi' : 'Efectivo'}
+                                    </span>
+                                    <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start">
+                                  <DropdownMenuItem
+                                    onClick={() => updatePaymentMethod(order.id, 'efectivo')}
+                                    className="gap-2"
+                                  >
+                                    <Banknote className="h-4 w-4 text-green-600" />
+                                    <span>Efectivo</span>
+                                    {paymentMethod === 'efectivo' && <Check className="h-3.5 w-3.5 ml-auto" />}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => updatePaymentMethod(order.id, 'nequi')}
+                                    className="gap-2"
+                                  >
+                                    <Smartphone className="h-4 w-4 text-purple-600" />
+                                    <span>Nequi</span>
+                                    {paymentMethod === 'nequi' && <Check className="h-3.5 w-3.5 ml-auto" />}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                            <TableCell className="text-right font-semibold text-primary">{formatPrice(order.total_price)}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">{new Date(order.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
