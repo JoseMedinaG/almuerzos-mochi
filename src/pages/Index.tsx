@@ -4,12 +4,14 @@ import { getTodayMenu, getMenuItems } from "@/lib/supabase-helpers";
 import MenuDisplay from "@/components/MenuDisplay";
 import OrderForm from "@/components/OrderForm";
 import { Link } from "react-router-dom";
-import { ShieldCheck, UtensilsCrossed } from "lucide-react";
+import { ShieldCheck, UtensilsCrossed, Bell } from "lucide-react";
 import heroImage from "@/assets/hero-lunch.jpg";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [orderKey, setOrderKey] = useState(0);
-
+  const { isSubscribed, isSupported, subscribe } = usePushNotifications();
   const { data: menu, isLoading: menuLoading } = useQuery({
     queryKey: ['todayMenu'],
     queryFn: getTodayMenu,
@@ -66,6 +68,16 @@ const Index = () => {
             <UtensilsCrossed className="h-10 w-10 text-primary-foreground mx-auto mb-2" />
             <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Menú del Día</h1>
             <p className="text-primary-foreground/80 mt-1">{new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            {isSupported && !isSubscribed && (
+              <Button
+                variant="secondary"
+                size="sm"
+                className="mt-3"
+                onClick={() => subscribe()}
+              >
+                <Bell className="h-4 w-4 mr-1" /> Activar notificaciones
+              </Button>
+            )}
           </div>
         </div>
       </header>
