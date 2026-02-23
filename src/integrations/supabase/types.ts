@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_config: {
+        Row: {
+          created_at: string
+          key: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          value: Json
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       daily_menus: {
         Row: {
           created_at: string
@@ -178,6 +196,30 @@ export type Database = {
           full_name?: string | null
           id?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
         }
         Relationships: []
       }

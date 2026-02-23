@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Trash2, CalendarDays, Upload, Plus } from "lucide-react";
+import { Trash2, CalendarDays, Upload, Plus, Bell } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { sendMenuNotification } from "@/hooks/usePushNotifications";
 
 const SAMPLE_MENU = `BUENOS DIAS
 
@@ -105,6 +106,16 @@ export default function AdminMenuManager() {
       queryClient.invalidateQueries({ queryKey: ['menuItems'] });
       toast.success(`Menú importado: ${parsed.items.length} items`);
       setMenuText("");
+
+      // Send push notification to all subscribers
+      try {
+        const sent = await sendMenuNotification();
+        if (sent) {
+          toast.success("Notificación enviada a los suscriptores 🔔");
+        }
+      } catch {
+        // Silent fail - notification is optional
+      }
     } catch (e: any) {
       toast.error(e.message || "Error importando menú");
     }
