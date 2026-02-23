@@ -24,8 +24,8 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,webp,woff,woff2}"],
       },
       manifest: {
-        name: "Almuerzos Mochi",
-        short_name: "Mochi",
+        name: "lunchppy",
+        short_name: "lunchppy",
         description: "Pedidos de almuerzo del día",
         theme_color: "#C2410C",
         background_color: "#FFFBEB",
