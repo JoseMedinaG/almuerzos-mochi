@@ -68,18 +68,18 @@ const Index = () => {
             <UtensilsCrossed className="h-10 w-10 text-primary-foreground mx-auto mb-2" />
             <h1 className="text-3xl md:text-4xl font-bold text-primary-foreground">Menú del Día</h1>
             <p className="text-primary-foreground/80 mt-1">{new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
-            {isSupported && !isSubscribed && (
-              <Button
-                variant="secondary"
-                size="sm"
-                className="mt-3"
-                onClick={() => subscribe()}
-              >
-                <Bell className="h-4 w-4 mr-1" /> Activar notificaciones
-              </Button>
-            )}
           </div>
         </div>
+        {isSupported && !isSubscribed && (
+          <Button
+            variant="secondary"
+            size="icon"
+            className="absolute top-4 right-4"
+            onClick={() => subscribe()}
+          >
+            <Bell className="h-5 w-5" />
+          </Button>
+        )}
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
