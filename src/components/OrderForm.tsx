@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { createOrder } from "@/lib/supabase-helpers";
 import { toast } from "sonner";
 import { UtensilsCrossed, Soup, Salad, Star, Send, Banknote, Smartphone } from "lucide-react";
@@ -33,6 +34,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"efectivo" | "nequi">("efectivo");
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const proteins = useMemo(() => items.filter(i => i.type === "proteina"), [items]);
   const sides = useMemo(() => items.filter(i => i.type === "principio"), [items]);
@@ -50,7 +52,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
 
   const isSpecialOrder = !!selectedSpecial;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName.trim()) {
       toast.error("Por favor ingresa tu nombre");
@@ -60,7 +62,11 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
       toast.error("Selecciona una proteína o un especial");
       return;
     }
+    setShowConfirm(true);
+  };
 
+  const handleConfirmOrder = async () => {
+    setShowConfirm(false);
     setSubmitting(true);
     try {
       await createOrder({
@@ -304,6 +310,20 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
           </Button>
         </CardContent>
       </Card>
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Confirmar pedido?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que este será tu pedido? Una vez enviado no podrás modificarlo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmOrder}>Sí, hacer pedido</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 }
