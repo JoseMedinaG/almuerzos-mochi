@@ -8,6 +8,7 @@ import { ShieldCheck, UtensilsCrossed, Bell } from "lucide-react";
 import heroImage from "@/assets/hero-lunch.jpg";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Button } from "@/components/ui/button";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Index = () => {
   const [orderKey, setOrderKey] = useState(0);
@@ -98,7 +99,8 @@ const Index = () => {
         </div>
       </main>
 
-      <footer className="fixed bottom-4 right-4">
+      <footer className="fixed bottom-4 right-4 flex items-center gap-2">
+        <ThemeToggle />
         <Link to="/admin" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
           <ShieldCheck className="h-3 w-3" /> Admin
         </Link>
