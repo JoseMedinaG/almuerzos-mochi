@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone, ChevronDown, Loader2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone, ChevronDown, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminOrders() {
@@ -18,6 +19,7 @@ export default function AdminOrders() {
   const [copied, setCopied] = useState(false);
   const [selectedDate, setSelectedDate] = useState(today);
   const [updatingPayment, setUpdatingPayment] = useState<string | null>(null);
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: menu } = useQuery({
@@ -119,6 +121,17 @@ export default function AdminOrders() {
     setUpdatingPayment(null);
   };
 
+  const deleteOrder = async (orderId: string) => {
+    const { error } = await supabase.from('orders').delete().eq('id', orderId);
+    if (error) {
+      toast.error("Error al eliminar el pedido");
+    } else {
+      toast.success("Pedido eliminado");
+      queryClient.invalidateQueries({ queryKey: ['adminOrders', menu?.id] });
+    }
+    setDeletingOrderId(null);
+  };
+
   const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
   const totalEfectivo = orders?.filter(o => (o as any).payment_method === 'efectivo' || !(o as any).payment_method).reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
   const totalNequi = orders?.filter(o => (o as any).payment_method === 'nequi').reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
@@ -210,6 +223,7 @@ export default function AdminOrders() {
                         <TableHead>Pago</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                         <TableHead>Hora</TableHead>
+                        <TableHead></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -273,6 +287,11 @@ export default function AdminOrders() {
                             </TableCell>
                             <TableCell className="text-right font-semibold text-primary">{formatPrice(order.total_price)}</TableCell>
                             <TableCell className="text-sm text-muted-foreground">{new Date(order.created_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeletingOrderId(order.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         );
                       })}
@@ -284,6 +303,18 @@ export default function AdminOrders() {
           )}
         </CardContent>
       </Card>
+      <AlertDialog open={!!deletingOrderId} onOpenChange={(open) => !open && setDeletingOrderId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar pedido?</AlertDialogTitle>
+            <AlertDialogDescription>Esta acción no se puede deshacer. El pedido será eliminado permanentemente.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deletingOrderId && deleteOrder(deletingOrderId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Eliminar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
