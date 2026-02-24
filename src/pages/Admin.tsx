@@ -9,6 +9,7 @@ import AdminOrders from "@/components/AdminOrders";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogOut, UtensilsCrossed, ClipboardList, ShoppingBag } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { toast } from "sonner";
 import type { Session } from "@supabase/supabase-js";
 
@@ -72,6 +73,7 @@ export default function Admin() {
             Panel Admin
           </h1>
           <div className="flex items-center gap-1 sm:gap-2">
+            <ThemeToggle />
             <Button variant="outline" size="sm" onClick={() => navigate('/')} className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
               <ShoppingBag className="h-4 w-4 shrink-0" /> <span className="hidden sm:inline">Hacer</span> Pedido
             </Button>
