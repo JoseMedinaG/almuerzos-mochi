@@ -85,8 +85,8 @@ const Index = () => {
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Menu */}
-          <div>
+          {/* Menu - hidden on mobile since the order form already shows options */}
+          <div className="hidden md:block">
             <h2 className="text-2xl font-bold mb-4">Menú</h2>
             {items && <MenuDisplay greeting={menu.greeting || ''} items={items} />}
           </div>
