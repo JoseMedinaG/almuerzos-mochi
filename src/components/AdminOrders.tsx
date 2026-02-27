@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone, ChevronDown, Loader2, Trash2 } from "lucide-react";
+import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone, ChevronDown, Loader2, Trash2, Shuffle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function AdminOrders() {
@@ -20,6 +20,9 @@ export default function AdminOrders() {
   const [selectedDate, setSelectedDate] = useState(today);
   const [updatingPayment, setUpdatingPayment] = useState<string | null>(null);
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
+  const [nequiWinner, setNequiWinner] = useState<string | null>(null);
+  const [showNequiRaffle, setShowNequiRaffle] = useState(false);
+  const [isRaffling, setIsRaffling] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: menu } = useQuery({
@@ -132,9 +135,31 @@ export default function AdminOrders() {
     setDeletingOrderId(null);
   };
 
+  const nequiOrders = orders?.filter(o => o.payment_method === 'nequi') || [];
+
+  const handleNequiRaffle = () => {
+    if (!nequiOrders.length) return;
+    setShowNequiRaffle(true);
+    setIsRaffling(true);
+    setNequiWinner(null);
+
+    // Animate through names for 2 seconds then pick winner
+    const interval = setInterval(() => {
+      const randomIdx = Math.floor(Math.random() * nequiOrders.length);
+      setNequiWinner(nequiOrders[randomIdx].customer_name);
+    }, 100);
+
+    setTimeout(() => {
+      clearInterval(interval);
+      const winnerIdx = Math.floor(Math.random() * nequiOrders.length);
+      setNequiWinner(nequiOrders[winnerIdx].customer_name);
+      setIsRaffling(false);
+    }, 2000);
+  };
+
   const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
-  const totalEfectivo = orders?.filter(o => (o as any).payment_method === 'efectivo' || !(o as any).payment_method).reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
-  const totalNequi = orders?.filter(o => (o as any).payment_method === 'nequi').reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
+  const totalEfectivo = orders?.filter(o => o.payment_method === 'efectivo' || !o.payment_method).reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
+  const totalNequi = orders?.filter(o => o.payment_method === 'nequi').reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
 
   return (
     <div className="space-y-6">
@@ -203,6 +228,15 @@ export default function AdminOrders() {
                     <p className="text-xl font-bold text-purple-600">{formatPrice(totalNequi)}</p>
                   </div>
                 </div>
+                {nequiOrders.length > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handleNequiRaffle}
+                    className="gap-2 self-center border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950"
+                  >
+                    <Shuffle className="h-4 w-4" /> Sorteo Nequi
+                  </Button>
+                )}
               </div>
 
               {isLoading ? (
@@ -303,6 +337,36 @@ export default function AdminOrders() {
           )}
         </CardContent>
       </Card>
+      <Dialog open={showNequiRaffle} onOpenChange={setShowNequiRaffle}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2">
+              <Shuffle className="h-5 w-5 text-purple-600" /> Sorteo Nequi
+            </DialogTitle>
+            <DialogDescription>
+              Persona seleccionada para recoger el pago Nequi ({formatPrice(totalNequi)})
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6">
+            <p className={`text-3xl font-bold text-purple-600 transition-all ${isRaffling ? 'animate-pulse' : ''}`}>
+              {nequiWinner || '...'}
+            </p>
+            {!isRaffling && nequiWinner && (
+              <p className="text-sm text-muted-foreground mt-3">
+                🎉 ¡{nequiWinner} recoge el Nequi hoy!
+              </p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowNequiRaffle(false)} className="flex-1">
+              Cerrar
+            </Button>
+            <Button onClick={handleNequiRaffle} disabled={isRaffling} className="flex-1 gap-2 bg-purple-600 hover:bg-purple-700">
+              <Shuffle className="h-4 w-4" /> Sortear de nuevo
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <AlertDialog open={!!deletingOrderId} onOpenChange={(open) => !open && setDeletingOrderId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
