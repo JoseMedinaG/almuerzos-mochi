@@ -4,11 +4,13 @@ import { getTodayMenu, getMenuItems } from "@/lib/supabase-helpers";
 import MenuDisplay from "@/components/MenuDisplay";
 import OrderForm from "@/components/OrderForm";
 import { Link } from "react-router-dom";
-import { ShieldCheck, UtensilsCrossed, Bell, Smartphone } from "lucide-react";
+import { ShieldCheck, UtensilsCrossed, Bell, Smartphone, Eye } from "lucide-react";
 import heroImage from "@/assets/hero-lunch.jpg";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import PublicOrdersView from "@/components/PublicOrdersView";
 
 const Index = () => {
   const [orderKey, setOrderKey] = useState(0);
@@ -87,9 +89,22 @@ const Index = () => {
       <div className="max-w-4xl mx-auto px-4 pt-6">
         <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 text-sm">
           <Smartphone className="h-5 w-5 text-primary shrink-0" />
-          <p className="text-foreground">
+          <p className="text-foreground flex-1">
             <span className="font-semibold">Nequi:</span> 3115286160 — <span className="font-medium">Alba Espinoza</span>
           </p>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8">
+                <Eye className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Pedidos del día</DialogTitle>
+              </DialogHeader>
+              <PublicOrdersView menuId={menu.id} />
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
