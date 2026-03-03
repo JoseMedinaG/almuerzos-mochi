@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone, ChevronDown, Loader2, Trash2, Shuffle } from "lucide-react";
 import { toast } from "sonner";
+import { supabase as supabaseClient } from "@/integrations/supabase/client";
 
 export default function AdminOrders() {
   const today = new Date().toISOString().split('T')[0];
@@ -149,11 +150,25 @@ export default function AdminOrders() {
       setNequiWinner(nequiOrders[randomIdx].customer_name);
     }, 100);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       clearInterval(interval);
       const winnerIdx = Math.floor(Math.random() * nequiOrders.length);
-      setNequiWinner(nequiOrders[winnerIdx].customer_name);
+      const winner = nequiOrders[winnerIdx].customer_name;
+      setNequiWinner(winner);
       setIsRaffling(false);
+
+      // Send push notification to inform Nequi payers
+      try {
+        await supabaseClient.functions.invoke("push-notifications", {
+          body: {
+            action: "notify",
+            title: "Sorteo Nequi 🎲",
+            body: `${winner} fue seleccionado(a) para recoger el pago Nequi de ${formatPrice(totalNequi)}.`,
+          },
+        });
+      } catch {
+        // Silent fail - notification is best-effort
+      }
     }, 2000);
   };
 
