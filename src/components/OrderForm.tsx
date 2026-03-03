@@ -314,8 +314,28 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Confirmar pedido?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de que este será tu pedido? Una vez enviado no podrás modificarlo.
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p>Revisa tu pedido antes de enviarlo:</p>
+                <div className="bg-secondary/30 rounded-lg p-4 text-sm space-y-1 text-foreground">
+                  <p><span className="font-medium">Nombre:</span> {customerName}</p>
+                  {customerPhone && <p><span className="font-medium">Teléfono:</span> {customerPhone}</p>}
+                  {isSpecialOrder ? (
+                    <p><span className="font-medium">Especial:</span> ⭐ {specials.find(s => s.id === selectedSpecial)?.name}</p>
+                  ) : (
+                    <>
+                      <p><span className="font-medium">Proteína:</span> {proteins.find(p => p.id === selectedProtein)?.name || '-'}</p>
+                      <p><span className="font-medium">Principio:</span> {selectedSide !== "none" ? sides.find(s => s.id === selectedSide)?.name : 'Sin principio'}</p>
+                      <p><span className="font-medium">Ensalada:</span> {wantsSalad ? 'Sí' : 'No'}</p>
+                    </>
+                  )}
+                  <p><span className="font-medium">Sopa:</span> {selectedSoup !== "none" ? soups.find(s => s.id === selectedSoup)?.name : 'Sin sopa'}</p>
+                  {notes && <p><span className="font-medium">Notas:</span> {notes}</p>}
+                  <p><span className="font-medium">Pago:</span> {paymentMethod === 'nequi' ? 'Nequi' : 'Efectivo'}</p>
+                  <p className="font-bold text-primary pt-1">Total: {formatPrice(totalPrice)}</p>
+                </div>
+                <p className="text-muted-foreground text-xs">Una vez enviado no podrás modificarlo.</p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
