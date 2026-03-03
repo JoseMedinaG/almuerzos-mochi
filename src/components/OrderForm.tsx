@@ -29,7 +29,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
   const [selectedProtein, setSelectedProtein] = useState("");
   const [selectedSide, setSelectedSide] = useState("none");
   const [selectedSoup, setSelectedSoup] = useState("none");
-  const [wantsSalad, setWantsSalad] = useState(false);
+  const [wantsSalad, setWantsSalad] = useState(true);
   const [selectedSpecial, setSelectedSpecial] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<"efectivo" | "nequi">("efectivo");
