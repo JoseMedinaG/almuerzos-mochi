@@ -4,7 +4,7 @@ import { getTodayMenu, getMenuItems } from "@/lib/supabase-helpers";
 import MenuDisplay from "@/components/MenuDisplay";
 import OrderForm from "@/components/OrderForm";
 import { Link } from "react-router-dom";
-import { ShieldCheck, UtensilsCrossed, Bell } from "lucide-react";
+import { ShieldCheck, UtensilsCrossed, Bell, Smartphone } from "lucide-react";
 import heroImage from "@/assets/hero-lunch.jpg";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,16 @@ const Index = () => {
           </Button>
         )}
       </header>
+
+      {/* Nequi info banner */}
+      <div className="max-w-4xl mx-auto px-4 pt-6">
+        <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 text-sm">
+          <Smartphone className="h-5 w-5 text-primary shrink-0" />
+          <p className="text-foreground">
+            <span className="font-semibold">Nequi:</span> 3115286160 — <span className="font-medium">Alba Espinoza</span>
+          </p>
+        </div>
+      </div>
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="grid md:grid-cols-2 gap-8">
