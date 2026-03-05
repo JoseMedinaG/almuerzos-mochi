@@ -37,9 +37,9 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
   return (
     <div className="space-y-3">
       {raffleWinner?.name && (
-        <div className="flex items-center gap-2 bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 rounded-xl px-4 py-3 text-sm">
-          <Trophy className="h-5 w-5 text-purple-600 dark:text-purple-400 shrink-0" />
-          <p className="text-purple-800 dark:text-purple-200">
+        <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: 'rgba(200, 0, 124, 0.12)', borderColor: 'rgba(200, 0, 124, 0.3)', border: '1px solid' }}>
+          <Trophy className="h-5 w-5 shrink-0" style={{ color: '#C8007C' }} />
+          <p style={{ color: '#C8007C' }}>
             <span className="font-semibold">Sorteo Nequi:</span> Hoy paga <span className="font-bold">{raffleWinner.name}</span> 🎉
           </p>
         </div>
