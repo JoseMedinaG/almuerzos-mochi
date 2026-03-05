@@ -23,42 +23,41 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">{orders.length} pedido(s) hoy</p>
-      <div className="rounded-lg border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>Pedido</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead>Pago</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order: any) => {
-              const description = order.special
-                ? order.special.name
-                : [
-                    order.protein?.name,
-                    order.side?.name,
-                    order.wants_salad && 'Ensalada',
-                    order.soup?.name,
-                  ].filter(Boolean).join(', ');
+      <div className="space-y-3">
+        {orders.map((order: any) => {
+          const items: string[] = [];
+          if (order.special) {
+            items.push(`🍽️ Especial: ${order.special.name}`);
+          } else {
+            if (order.protein?.name) items.push(`🥩 ${order.protein.name}`);
+            if (order.side?.name) items.push(`🍚 ${order.side.name}`);
+            if (order.wants_salad) items.push('🥗 Ensalada');
+          }
+          if (order.soup?.name) items.push(`🍲 ${order.soup.name}`);
 
-              return (
-                <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.customer_name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{description}</TableCell>
-                  <TableCell className="text-right font-medium">{formatPrice(order.total_price)}</TableCell>
-                  <TableCell>
-                    <Badge variant={order.payment_method === 'nequi' ? 'default' : 'secondary'}>
-                      {order.payment_method === 'nequi' ? 'Nequi' : 'Efectivo'}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+          return (
+            <div key={order.id} className="rounded-lg border bg-card p-3 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground">{order.customer_name}</span>
+                <Badge variant={order.payment_method === 'nequi' ? 'default' : 'secondary'}>
+                  {order.payment_method === 'nequi' ? 'Nequi' : 'Efectivo'}
+                </Badge>
+              </div>
+              <div className="text-sm text-muted-foreground space-y-0.5">
+                {items.map((item, i) => (
+                  <p key={i}>{item}</p>
+                ))}
+              </div>
+              {order.notes && (
+                <p className="text-xs text-muted-foreground italic">📝 {order.notes}</p>
+              )}
+              {order.customer_phone && (
+                <p className="text-xs text-muted-foreground">📱 {order.customer_phone}</p>
+              )}
+              <p className="text-right font-semibold text-foreground">{formatPrice(order.total_price)}</p>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
