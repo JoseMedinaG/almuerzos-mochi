@@ -28,11 +28,11 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
           if (order.special) {
             items.push(`🍽️ Especial: ${order.special.name}`);
           } else {
-            if (order.protein?.name) items.push(`🥩 ${order.protein.name}`);
-            if (order.side?.name) items.push(`🍚 ${order.side.name}`);
-            if (order.wants_salad) items.push('🥗 Ensalada');
+            items.push(order.protein?.name ? `🥩 ${order.protein.name}` : '🥩 Sin proteína');
+            items.push(order.side?.name ? `🍚 ${order.side.name}` : '🍚 Sin principio');
+            items.push(order.wants_salad ? '🥗 Con ensalada' : '🥗 Sin ensalada');
           }
-          if (order.soup?.name) items.push(`🍲 ${order.soup.name}`);
+          items.push(order.soup?.name ? `🍲 ${order.soup.name}` : '🍲 Sin sopa');
 
           return (
             <div key={order.id} className="rounded-lg border bg-card p-3 space-y-1.5">
