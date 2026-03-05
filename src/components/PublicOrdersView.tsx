@@ -69,7 +69,6 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
                 >
                   {order.payment_method === 'nequi' ? 'Nequi' : 'Efectivo'}
                 </Badge>
-                </Badge>
               </div>
               <div className="text-sm text-muted-foreground space-y-0.5">
                 {items.map((item, i) => (
