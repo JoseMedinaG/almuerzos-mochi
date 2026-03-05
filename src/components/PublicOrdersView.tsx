@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { getTodayOrders } from "@/lib/supabase-helpers";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
 interface PublicOrdersViewProps {
