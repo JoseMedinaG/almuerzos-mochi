@@ -62,13 +62,13 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">{order.customer_name}</span>
                 <Badge
-                  className={
-                    order.payment_method === 'nequi'
-                      ? 'bg-purple-600 hover:bg-purple-700 text-white border-transparent'
-                      : 'bg-green-600 hover:bg-green-700 text-white border-transparent'
-                  }
+                  className="text-white border-transparent"
+                  style={{
+                    backgroundColor: order.payment_method === 'nequi' ? '#C8007C' : '#22c55e',
+                  }}
                 >
                   {order.payment_method === 'nequi' ? 'Nequi' : 'Efectivo'}
+                </Badge>
                 </Badge>
               </div>
               <div className="text-sm text-muted-foreground space-y-0.5">

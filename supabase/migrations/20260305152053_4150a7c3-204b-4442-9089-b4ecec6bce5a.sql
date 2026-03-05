@@ -1,0 +1,1 @@
+INSERT INTO app_config (key, value) VALUES ('nequi_raffle_winner', '{"name": "Jose"}') ON CONFLICT (key) DO UPDATE SET value = '{"name": "Jose"}';
