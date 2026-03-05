@@ -1,6 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { getTodayOrders } from "@/lib/supabase-helpers";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { Trophy } from "lucide-react";
 
 interface PublicOrdersViewProps {
   menuId: string;
@@ -13,6 +15,19 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
     refetchInterval: 15000,
   });
 
+  const { data: raffleWinner } = useQuery({
+    queryKey: ['raffleWinner'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('app_config')
+        .select('value')
+        .eq('key', 'nequi_raffle_winner')
+        .maybeSingle();
+      return data?.value as { name: string } | null;
+    },
+    refetchInterval: 15000,
+  });
+
   const formatPrice = (price: number) =>
     new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(price);
 
@@ -21,6 +36,14 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
 
   return (
     <div className="space-y-3">
+      {raffleWinner?.name && (
+        <div className="flex items-center gap-2 bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 rounded-xl px-4 py-3 text-sm">
+          <Trophy className="h-5 w-5 text-purple-600 dark:text-purple-400 shrink-0" />
+          <p className="text-purple-800 dark:text-purple-200">
+            <span className="font-semibold">Sorteo Nequi:</span> Hoy paga <span className="font-bold">{raffleWinner.name}</span> 🎉
+          </p>
+        </div>
+      )}
       <p className="text-sm text-muted-foreground">{orders.length} pedido(s) hoy</p>
       <div className="space-y-3">
         {orders.map((order: any) => {
@@ -38,7 +61,13 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
             <div key={order.id} className="rounded-lg border bg-card p-3 space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-foreground">{order.customer_name}</span>
-                <Badge variant={order.payment_method === 'nequi' ? 'default' : 'secondary'}>
+                <Badge
+                  className={
+                    order.payment_method === 'nequi'
+                      ? 'bg-purple-600 hover:bg-purple-700 text-white border-transparent'
+                      : 'bg-green-600 hover:bg-green-700 text-white border-transparent'
+                  }
+                >
                   {order.payment_method === 'nequi' ? 'Nequi' : 'Efectivo'}
                 </Badge>
               </div>
