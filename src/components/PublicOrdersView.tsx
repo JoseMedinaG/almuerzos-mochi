@@ -36,14 +36,19 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
 
   return (
     <div className="space-y-3">
-      {raffleWinner?.name && (
-        <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: 'rgba(200, 0, 124, 0.12)', borderColor: 'rgba(200, 0, 124, 0.3)', border: '1px solid' }}>
-          <Trophy className="h-5 w-5 shrink-0" style={{ color: '#C8007C' }} />
-          <p style={{ color: '#C8007C' }}>
-            <span className="font-semibold">Sorteo Nequi:</span> Hoy paga <span className="font-bold">{raffleWinner.name}</span> 🎉
-          </p>
-        </div>
-      )}
+      {raffleWinner?.name && (() => {
+        const nequiTotal = orders
+          .filter((o: any) => o.payment_method === 'nequi')
+          .reduce((sum: number, o: any) => sum + o.total_price, 0);
+        return (
+          <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: 'rgba(200, 0, 124, 0.12)', borderColor: 'rgba(200, 0, 124, 0.3)', border: '1px solid' }}>
+            <Trophy className="h-5 w-5 shrink-0" style={{ color: '#C8007C' }} />
+            <p style={{ color: '#C8007C' }}>
+              <span className="font-semibold">Sorteo Nequi:</span> Hoy paga <span className="font-bold">{raffleWinner.name}</span> — {formatPrice(nequiTotal)} 🎉
+            </p>
+          </div>
+        );
+      })()}
       <p className="text-sm text-muted-foreground">{orders.length} pedido(s) hoy</p>
       <div className="space-y-3">
         {orders.map((order: any) => {
