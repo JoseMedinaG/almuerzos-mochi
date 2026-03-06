@@ -117,10 +117,6 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
             <Label htmlFor="name">Nombre *</Label>
             <Input id="name" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Tu nombre" />
           </div>
-          <div>
-            <Label htmlFor="phone">Teléfono (opcional)</Label>
-            <Input id="phone" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="300 123 4567" />
-          </div>
         </CardContent>
       </Card>
 
