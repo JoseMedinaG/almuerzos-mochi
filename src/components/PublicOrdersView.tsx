@@ -44,7 +44,7 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
           <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: 'rgba(200, 0, 124, 0.12)', borderColor: 'rgba(200, 0, 124, 0.3)', border: '1px solid' }}>
             <Trophy className="h-5 w-5 shrink-0" style={{ color: '#C8007C' }} />
             <p style={{ color: '#C8007C' }}>
-              <span className="font-semibold">Sorteo Nequi:</span> Hoy paga <span className="font-bold">{raffleWinner.name}</span> — {formatPrice(nequiTotal)} 🎉
+              <span className="font-semibold">Sorteo Nequi:</span> Hoy paga <span className="font-bold text-foreground">{raffleWinner.name}</span> — {formatPrice(nequiTotal)} 🎉
             </p>
           </div>
         );
