@@ -138,24 +138,52 @@ export default function AdminOrders() {
 
   const nequiOrders = orders?.filter(o => o.payment_method === 'nequi') || [];
 
+  // Fetch previous raffle winner to exclude from next raffle
+  const { data: previousWinner } = useQuery({
+    queryKey: ['previousRaffleWinner'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('app_config')
+        .select('value')
+        .eq('key', 'nequi_raffle_winner')
+        .maybeSingle();
+      return data?.value as { name: string } | null;
+    },
+  });
+
   const handleNequiRaffle = () => {
     if (!nequiOrders.length) return;
     setShowNequiRaffle(true);
     setIsRaffling(true);
     setNequiWinner(null);
 
+    // If more than 1 Nequi payer, exclude previous winner
+    let eligibleOrders = nequiOrders;
+    if (nequiOrders.length > 1 && previousWinner?.name) {
+      eligibleOrders = nequiOrders.filter(o => o.customer_name !== previousWinner.name);
+      // If all filtered out (unlikely), fall back to all
+      if (eligibleOrders.length === 0) eligibleOrders = nequiOrders;
+    }
+
     // Animate through names for 2 seconds then pick winner
     const interval = setInterval(() => {
-      const randomIdx = Math.floor(Math.random() * nequiOrders.length);
-      setNequiWinner(nequiOrders[randomIdx].customer_name);
+      const randomIdx = Math.floor(Math.random() * eligibleOrders.length);
+      setNequiWinner(eligibleOrders[randomIdx].customer_name);
     }, 100);
 
     setTimeout(async () => {
       clearInterval(interval);
-      const winnerIdx = Math.floor(Math.random() * nequiOrders.length);
-      const winner = nequiOrders[winnerIdx].customer_name;
+      const winnerIdx = Math.floor(Math.random() * eligibleOrders.length);
+      const winner = eligibleOrders[winnerIdx].customer_name;
       setNequiWinner(winner);
       setIsRaffling(false);
+
+      // Save winner to app_config so PublicOrdersView updates immediately
+      await supabase
+        .from('app_config')
+        .upsert({ key: 'nequi_raffle_winner', value: { name: winner } as any }, { onConflict: 'key' });
+      queryClient.invalidateQueries({ queryKey: ['raffleWinner'] });
+      queryClient.invalidateQueries({ queryKey: ['previousRaffleWinner'] });
 
       // Send push notification to inform Nequi payers
       try {
