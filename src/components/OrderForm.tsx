@@ -117,10 +117,6 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
             <Label htmlFor="name">Nombre *</Label>
             <Input id="name" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Tu nombre" />
           </div>
-          <div>
-            <Label htmlFor="phone">Teléfono (opcional)</Label>
-            <Input id="phone" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="300 123 4567" />
-          </div>
         </CardContent>
       </Card>
 
@@ -272,7 +268,10 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <RadioGroup value={paymentMethod} onValueChange={(val) => setPaymentMethod(val as "efectivo" | "nequi")}>
+          <RadioGroup value={paymentMethod} onValueChange={(val) => {
+            setPaymentMethod(val as "efectivo" | "nequi");
+            if (val === "efectivo") setCustomerPhone("");
+          }}>
             <div className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-secondary/50 transition-colors">
               <RadioGroupItem value="efectivo" id="pay-efectivo" />
               <Label htmlFor="pay-efectivo" className="cursor-pointer font-medium flex items-center gap-2">
@@ -286,6 +285,12 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
               </Label>
             </div>
           </RadioGroup>
+          {paymentMethod === "nequi" && (
+            <div className="mt-3 pt-3 border-t border-border">
+              <Label htmlFor="phone">Número Nequi / cuenta para transferencia</Label>
+              <Input id="phone" value={customerPhone} onChange={e => setCustomerPhone(e.target.value)} placeholder="300 123 4567" className="mt-1" />
+            </div>
+          )}
         </CardContent>
       </Card>
 

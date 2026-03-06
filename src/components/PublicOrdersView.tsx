@@ -83,8 +83,8 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
               {order.notes && (
                 <p className="text-xs text-muted-foreground italic">📝 {order.notes}</p>
               )}
-              {order.customer_phone && (
-                <p className="text-xs text-muted-foreground">📱 {order.customer_phone}</p>
+              {order.payment_method === 'nequi' && order.customer_phone && (
+                <p className="text-xs text-muted-foreground">📱 Nequi: {order.customer_phone}</p>
               )}
               <p className="text-right font-semibold text-foreground">{formatPrice(order.total_price)}</p>
             </div>
