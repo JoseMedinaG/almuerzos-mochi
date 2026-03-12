@@ -179,9 +179,10 @@ export default function AdminOrders() {
       setIsRaffling(false);
 
       // Save winner to app_config so PublicOrdersView updates immediately
+      const winnerOrder = eligibleOrders[winnerIdx];
       await supabase
         .from('app_config')
-        .upsert({ key: 'nequi_raffle_winner', value: { name: winner } as any }, { onConflict: 'key' });
+        .upsert({ key: 'nequi_raffle_winner', value: { name: winner, phone: winnerOrder.customer_phone } as any }, { onConflict: 'key' });
       queryClient.invalidateQueries({ queryKey: ['raffleWinner'] });
       queryClient.invalidateQueries({ queryKey: ['previousRaffleWinner'] });
 
