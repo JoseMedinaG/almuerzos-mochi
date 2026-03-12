@@ -23,7 +23,7 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
         .select('value')
         .eq('key', 'nequi_raffle_winner')
         .maybeSingle();
-      return data?.value as { name: string } | null;
+      return data?.value as { name: string; phone?: string } | null;
     },
     refetchInterval: 15000,
   });
@@ -44,7 +44,9 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
           <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm" style={{ backgroundColor: 'rgba(200, 0, 124, 0.12)', borderColor: 'rgba(200, 0, 124, 0.3)', border: '1px solid' }}>
             <Trophy className="h-5 w-5 shrink-0" style={{ color: '#C8007C' }} />
             <p style={{ color: '#C8007C' }}>
-              <span className="font-semibold">Sorteo Nequi:</span> Hoy paga <span className="font-bold text-foreground">{raffleWinner.name}</span> — {formatPrice(nequiTotal)} 🎉
+              <span className="font-semibold">Sorteo Nequi:</span> Hoy paga <span className="font-bold text-foreground">{raffleWinner.name}</span>
+              {raffleWinner.phone && <span className="block text-xs mt-0.5 opacity-90">📱 {raffleWinner.phone}</span>}
+              <span className="block font-semibold mt-0.5">{formatPrice(nequiTotal)} 🎉</span>
             </p>
           </div>
         );
