@@ -23,7 +23,7 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
         .select('value')
         .eq('key', 'nequi_raffle_winner')
         .maybeSingle();
-      return data?.value as { name: string } | null;
+      return data?.value as { name: string; phone?: string } | null;
     },
     refetchInterval: 15000,
   });
