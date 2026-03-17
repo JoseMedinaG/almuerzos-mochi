@@ -23,7 +23,11 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
         .select('value')
         .eq('key', 'nequi_raffle_winner')
         .maybeSingle();
-      return data?.value as { name: string; phone?: string } | null;
+      const val = data?.value as { name: string; phone?: string; date?: string } | null;
+      // Only show winner if it's from today
+      const today = new Date().toISOString().split('T')[0];
+      if (val && val.date && val.date !== today) return null;
+      return val;
     },
     refetchInterval: 15000,
   });
