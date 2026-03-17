@@ -182,7 +182,7 @@ export default function AdminOrders() {
       const winnerOrder = eligibleOrders[winnerIdx];
       await supabase
         .from('app_config')
-        .upsert({ key: 'nequi_raffle_winner', value: { name: winner, phone: winnerOrder.customer_phone } as any }, { onConflict: 'key' });
+        .upsert({ key: 'nequi_raffle_winner', value: { name: winner, phone: winnerOrder.customer_phone, date: selectedDate } as any }, { onConflict: 'key' });
       queryClient.invalidateQueries({ queryKey: ['raffleWinner'] });
       queryClient.invalidateQueries({ queryKey: ['previousRaffleWinner'] });
 
