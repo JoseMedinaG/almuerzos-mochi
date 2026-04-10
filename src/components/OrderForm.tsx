@@ -62,6 +62,10 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
       toast.error("Selecciona una proteína o un especial");
       return;
     }
+    if (paymentMethod === "nequi" && !customerPhone.trim()) {
+      toast.error("Para pago por Nequi debes ingresar tu número de teléfono");
+      return;
+    }
     setShowConfirm(true);
   };
 
