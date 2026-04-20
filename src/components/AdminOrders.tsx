@@ -100,7 +100,7 @@ export default function AdminOrders() {
       .map(([desc, qty]) => `${qty} ${desc}`)
       .join('\n');
 
-    return totalSoups > 0 ? `${result}\n\n${totalSoups} Sopa` : result;
+    return totalSoups > 0 ? `${result}\n\n${totalSoups} Sopa` : `${result}\n\nSin sopas`;
   };
 
   const handleCopySummary = async () => {
