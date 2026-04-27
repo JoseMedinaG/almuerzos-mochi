@@ -348,6 +348,15 @@ export default function AdminOrders() {
                     <Shuffle className="h-4 w-4" /> Sorteo Nequi
                   </Button>
                 )}
+                {orders && orders.length > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handlePickupRaffle}
+                    className="gap-2 self-center border-primary/40 text-primary hover:bg-primary/10"
+                  >
+                    <Truck className="h-4 w-4" /> Sorteo Recoger
+                  </Button>
+                )}
               </div>
 
               {isLoading ? (
