@@ -24,7 +24,22 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
         .eq('key', 'nequi_raffle_winner')
         .maybeSingle();
       const val = data?.value as { name: string; phone?: string; date?: string } | null;
-      // Only show winner if it's from today
+      const today = new Date().toISOString().split('T')[0];
+      if (val && val.date && val.date !== today) return null;
+      return val;
+    },
+    refetchInterval: 15000,
+  });
+
+  const { data: pickupWinners } = useQuery({
+    queryKey: ['pickupWinners'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('app_config')
+        .select('value')
+        .eq('key', 'pickup_winners')
+        .maybeSingle();
+      const val = data?.value as { names: string[]; date?: string } | null;
       const today = new Date().toISOString().split('T')[0];
       if (val && val.date && val.date !== today) return null;
       return val;
