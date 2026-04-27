@@ -267,6 +267,8 @@ export default function AdminOrders() {
       }
     }, 2000);
   };
+
+  const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
   const totalEfectivo = orders?.filter(o => o.payment_method === 'efectivo' || !o.payment_method).reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
   const totalNequi = orders?.filter(o => o.payment_method === 'nequi').reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
 
