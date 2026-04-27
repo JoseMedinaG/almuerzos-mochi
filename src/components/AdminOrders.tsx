@@ -487,6 +487,38 @@ export default function AdminOrders() {
           </div>
         </DialogContent>
       </Dialog>
+      <Dialog open={showPickupRaffle} onOpenChange={setShowPickupRaffle}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2">
+              <Truck className="h-5 w-5 text-primary" /> Sorteo Recoger Almuerzos
+            </DialogTitle>
+            <DialogDescription>
+              {(orders?.length || 0) > 5 ? '2 personas' : '1 persona'} para recoger los almuerzos hoy
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 space-y-2">
+            {pickupWinners.length > 0 ? pickupWinners.map((name, i) => (
+              <p key={i} className={`text-2xl font-bold text-primary transition-all ${isPickupRaffling ? 'animate-pulse' : ''}`}>
+                {name}
+              </p>
+            )) : <p className="text-2xl font-bold text-primary">...</p>}
+            {!isPickupRaffling && pickupWinners.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-3">
+                🛵 ¡{pickupWinners.join(' y ')} {pickupWinners.length > 1 ? 'van' : 'va'} a recoger hoy!
+              </p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowPickupRaffle(false)} className="flex-1">
+              Cerrar
+            </Button>
+            <Button onClick={handlePickupRaffle} disabled={isPickupRaffling} className="flex-1 gap-2">
+              <Shuffle className="h-4 w-4" /> Sortear de nuevo
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <AlertDialog open={!!deletingOrderId} onOpenChange={(open) => !open && setDeletingOrderId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
