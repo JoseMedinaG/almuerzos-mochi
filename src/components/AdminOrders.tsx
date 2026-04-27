@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone, ChevronDown, Loader2, Trash2, Shuffle } from "lucide-react";
+import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone, ChevronDown, Loader2, Trash2, Shuffle, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase as supabaseClient } from "@/integrations/supabase/client";
 
