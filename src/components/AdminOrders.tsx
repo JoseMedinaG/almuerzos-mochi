@@ -204,7 +204,69 @@ export default function AdminOrders() {
     }, 2000);
   };
 
-  const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
+  // Previous pickup winners (to exclude from today's raffle)
+  const { data: previousPickup } = useQuery({
+    queryKey: ['previousPickupWinners'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('app_config')
+        .select('value')
+        .eq('key', 'pickup_winners')
+        .maybeSingle();
+      return data?.value as { names: string[]; date?: string } | null;
+    },
+  });
+
+  const handlePickupRaffle = () => {
+    if (!orders?.length) return;
+    setShowPickupRaffle(true);
+    setIsPickupRaffling(true);
+    setPickupWinners([]);
+
+    const numWinners = orders.length > 5 ? 2 : 1;
+
+    // Unique customers
+    const uniqueNames = Array.from(new Set(orders.map(o => o.customer_name)));
+
+    // Exclude previous winners if possible
+    let eligible = uniqueNames;
+    if (previousPickup?.names?.length && uniqueNames.length > numWinners) {
+      const filtered = uniqueNames.filter(n => !previousPickup.names.includes(n));
+      if (filtered.length >= numWinners) eligible = filtered;
+    }
+
+    // Animate
+    const interval = setInterval(() => {
+      const shuffled = [...eligible].sort(() => Math.random() - 0.5);
+      setPickupWinners(shuffled.slice(0, numWinners));
+    }, 100);
+
+    setTimeout(async () => {
+      clearInterval(interval);
+      const shuffled = [...eligible].sort(() => Math.random() - 0.5);
+      const winners = shuffled.slice(0, numWinners);
+      setPickupWinners(winners);
+      setIsPickupRaffling(false);
+
+      await supabase
+        .from('app_config')
+        .upsert({ key: 'pickup_winners', value: { names: winners, date: selectedDate } as any }, { onConflict: 'key' });
+      queryClient.invalidateQueries({ queryKey: ['pickupWinners'] });
+      queryClient.invalidateQueries({ queryKey: ['previousPickupWinners'] });
+
+      try {
+        await supabaseClient.functions.invoke("push-notifications", {
+          body: {
+            action: "notify",
+            title: "Encargados de recoger 🛵",
+            body: `${winners.join(' y ')} ${winners.length > 1 ? 'van' : 'va'} a recoger los almuerzos hoy.`,
+          },
+        });
+      } catch {
+        // Silent fail
+      }
+    }, 2000);
+  };
   const totalEfectivo = orders?.filter(o => o.payment_method === 'efectivo' || !o.payment_method).reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
   const totalNequi = orders?.filter(o => o.payment_method === 'nequi').reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
 
