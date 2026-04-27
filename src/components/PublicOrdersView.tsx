@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getTodayOrders } from "@/lib/supabase-helpers";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy } from "lucide-react";
+import { Trophy, Truck } from "lucide-react";
 
 interface PublicOrdersViewProps {
   menuId: string;
