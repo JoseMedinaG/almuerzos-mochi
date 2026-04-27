@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getTodayOrders } from "@/lib/supabase-helpers";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { Trophy } from "lucide-react";
+import { Trophy, Truck } from "lucide-react";
 
 interface PublicOrdersViewProps {
   menuId: string;
@@ -24,7 +24,22 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
         .eq('key', 'nequi_raffle_winner')
         .maybeSingle();
       const val = data?.value as { name: string; phone?: string; date?: string } | null;
-      // Only show winner if it's from today
+      const today = new Date().toISOString().split('T')[0];
+      if (val && val.date && val.date !== today) return null;
+      return val;
+    },
+    refetchInterval: 15000,
+  });
+
+  const { data: pickupWinners } = useQuery({
+    queryKey: ['pickupWinners'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('app_config')
+        .select('value')
+        .eq('key', 'pickup_winners')
+        .maybeSingle();
+      const val = data?.value as { names: string[]; date?: string } | null;
       const today = new Date().toISOString().split('T')[0];
       if (val && val.date && val.date !== today) return null;
       return val;
@@ -55,6 +70,15 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
           </div>
         );
       })()}
+      {pickupWinners?.names && pickupWinners.names.length > 0 && (
+        <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm border bg-primary/10 border-primary/30">
+          <Truck className="h-5 w-5 shrink-0 text-primary" />
+          <p className="text-primary">
+            <span className="font-semibold">Encargado{pickupWinners.names.length > 1 ? 's' : ''} de recoger:</span>{' '}
+            <span className="font-bold text-foreground">{pickupWinners.names.join(' y ')}</span> 🛵
+          </p>
+        </div>
+      )}
       <p className="text-sm text-muted-foreground">{orders.length} pedido(s) hoy</p>
       <div className="space-y-3">
         {orders.map((order: any) => {

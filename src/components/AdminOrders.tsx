@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone, ChevronDown, Loader2, Trash2, Shuffle } from "lucide-react";
+import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone, ChevronDown, Loader2, Trash2, Shuffle, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase as supabaseClient } from "@/integrations/supabase/client";
 
@@ -24,6 +24,9 @@ export default function AdminOrders() {
   const [nequiWinner, setNequiWinner] = useState<string | null>(null);
   const [showNequiRaffle, setShowNequiRaffle] = useState(false);
   const [isRaffling, setIsRaffling] = useState(false);
+  const [pickupWinners, setPickupWinners] = useState<string[]>([]);
+  const [showPickupRaffle, setShowPickupRaffle] = useState(false);
+  const [isPickupRaffling, setIsPickupRaffling] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: menu } = useQuery({
@@ -201,6 +204,70 @@ export default function AdminOrders() {
     }, 2000);
   };
 
+  // Previous pickup winners (to exclude from today's raffle)
+  const { data: previousPickup } = useQuery({
+    queryKey: ['previousPickupWinners'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('app_config')
+        .select('value')
+        .eq('key', 'pickup_winners')
+        .maybeSingle();
+      return data?.value as { names: string[]; date?: string } | null;
+    },
+  });
+
+  const handlePickupRaffle = () => {
+    if (!orders?.length) return;
+    setShowPickupRaffle(true);
+    setIsPickupRaffling(true);
+    setPickupWinners([]);
+
+    const numWinners = orders.length > 5 ? 2 : 1;
+
+    // Unique customers
+    const uniqueNames = Array.from(new Set(orders.map(o => o.customer_name)));
+
+    // Exclude previous winners if possible
+    let eligible = uniqueNames;
+    if (previousPickup?.names?.length && uniqueNames.length > numWinners) {
+      const filtered = uniqueNames.filter(n => !previousPickup.names.includes(n));
+      if (filtered.length >= numWinners) eligible = filtered;
+    }
+
+    // Animate
+    const interval = setInterval(() => {
+      const shuffled = [...eligible].sort(() => Math.random() - 0.5);
+      setPickupWinners(shuffled.slice(0, numWinners));
+    }, 100);
+
+    setTimeout(async () => {
+      clearInterval(interval);
+      const shuffled = [...eligible].sort(() => Math.random() - 0.5);
+      const winners = shuffled.slice(0, numWinners);
+      setPickupWinners(winners);
+      setIsPickupRaffling(false);
+
+      await supabase
+        .from('app_config')
+        .upsert({ key: 'pickup_winners', value: { names: winners, date: selectedDate } as any }, { onConflict: 'key' });
+      queryClient.invalidateQueries({ queryKey: ['pickupWinners'] });
+      queryClient.invalidateQueries({ queryKey: ['previousPickupWinners'] });
+
+      try {
+        await supabaseClient.functions.invoke("push-notifications", {
+          body: {
+            action: "notify",
+            title: "Encargados de recoger 🛵",
+            body: `${winners.join(' y ')} ${winners.length > 1 ? 'van' : 'va'} a recoger los almuerzos hoy.`,
+          },
+        });
+      } catch {
+        // Silent fail
+      }
+    }, 2000);
+  };
+
   const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
   const totalEfectivo = orders?.filter(o => o.payment_method === 'efectivo' || !o.payment_method).reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
   const totalNequi = orders?.filter(o => o.payment_method === 'nequi').reduce((sum, o) => sum + (o.total_price || 0), 0) || 0;
@@ -279,6 +346,15 @@ export default function AdminOrders() {
                     className="gap-2 self-center border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950"
                   >
                     <Shuffle className="h-4 w-4" /> Sorteo Nequi
+                  </Button>
+                )}
+                {orders && orders.length > 0 && (
+                  <Button
+                    variant="outline"
+                    onClick={handlePickupRaffle}
+                    className="gap-2 self-center border-primary/40 text-primary hover:bg-primary/10"
+                  >
+                    <Truck className="h-4 w-4" /> Sorteo Recoger
                   </Button>
                 )}
               </div>
@@ -406,6 +482,38 @@ export default function AdminOrders() {
               Cerrar
             </Button>
             <Button onClick={handleNequiRaffle} disabled={isRaffling} className="flex-1 gap-2 bg-purple-600 hover:bg-purple-700">
+              <Shuffle className="h-4 w-4" /> Sortear de nuevo
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showPickupRaffle} onOpenChange={setShowPickupRaffle}>
+        <DialogContent className="max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2">
+              <Truck className="h-5 w-5 text-primary" /> Sorteo Recoger Almuerzos
+            </DialogTitle>
+            <DialogDescription>
+              {(orders?.length || 0) > 5 ? '2 personas' : '1 persona'} para recoger los almuerzos hoy
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 space-y-2">
+            {pickupWinners.length > 0 ? pickupWinners.map((name, i) => (
+              <p key={i} className={`text-2xl font-bold text-primary transition-all ${isPickupRaffling ? 'animate-pulse' : ''}`}>
+                {name}
+              </p>
+            )) : <p className="text-2xl font-bold text-primary">...</p>}
+            {!isPickupRaffling && pickupWinners.length > 0 && (
+              <p className="text-sm text-muted-foreground mt-3">
+                🛵 ¡{pickupWinners.join(' y ')} {pickupWinners.length > 1 ? 'van' : 'va'} a recoger hoy!
+              </p>
+            )}
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowPickupRaffle(false)} className="flex-1">
+              Cerrar
+            </Button>
+            <Button onClick={handlePickupRaffle} disabled={isPickupRaffling} className="flex-1 gap-2">
               <Shuffle className="h-4 w-4" /> Sortear de nuevo
             </Button>
           </div>
