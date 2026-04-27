@@ -24,6 +24,9 @@ export default function AdminOrders() {
   const [nequiWinner, setNequiWinner] = useState<string | null>(null);
   const [showNequiRaffle, setShowNequiRaffle] = useState(false);
   const [isRaffling, setIsRaffling] = useState(false);
+  const [pickupWinners, setPickupWinners] = useState<string[]>([]);
+  const [showPickupRaffle, setShowPickupRaffle] = useState(false);
+  const [isPickupRaffling, setIsPickupRaffling] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: menu } = useQuery({
