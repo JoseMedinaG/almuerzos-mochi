@@ -70,15 +70,21 @@ export default function PublicOrdersView({ menuId }: PublicOrdersViewProps) {
           </div>
         );
       })()}
-      {pickupWinners?.names && pickupWinners.names.length > 0 && (
-        <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm border bg-primary/10 border-primary/30">
-          <Truck className="h-5 w-5 shrink-0 text-primary" />
-          <p className="text-primary">
-            <span className="font-semibold">Encargado{pickupWinners.names.length > 1 ? 's' : ''} de recoger:</span>{' '}
-            <span className="font-bold text-foreground">{pickupWinners.names.join(' y ')}</span> 🛵
-          </p>
-        </div>
-      )}
+      {pickupWinners?.names && pickupWinners.names.length > 0 && (() => {
+        const cashTotal = orders
+          .filter((o: any) => o.payment_method === 'efectivo')
+          .reduce((sum: number, o: any) => sum + o.total_price, 0);
+        return (
+          <div className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm border bg-primary/10 border-primary/30">
+            <Truck className="h-5 w-5 shrink-0 text-primary" />
+            <p className="text-primary">
+              <span className="font-semibold">Encargado{pickupWinners.names.length > 1 ? 's' : ''} de recoger:</span>{' '}
+              <span className="font-bold text-foreground">{pickupWinners.names.join(' y ')}</span> 🛵
+              <span className="block font-semibold mt-0.5">A recoger en efectivo: {formatPrice(cashTotal)} 💵</span>
+            </p>
+          </div>
+        );
+      })()}
       <p className="text-sm text-muted-foreground">{orders.length} pedido(s) hoy</p>
       <div className="space-y-3">
         {orders.map((order: any) => {
