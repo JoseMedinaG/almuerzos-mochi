@@ -58,6 +58,10 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
       toast.error("Por favor ingresa tu nombre");
       return;
     }
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(customerName.trim())) {
+      toast.error("El nombre solo puede contener letras");
+      return;
+    }
     if (!selectedProtein && !selectedSpecial) {
       toast.error("Selecciona una proteína o un especial");
       return;
