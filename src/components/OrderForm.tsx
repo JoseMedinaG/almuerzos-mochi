@@ -58,6 +58,10 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
       toast.error("Por favor ingresa tu nombre");
       return;
     }
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(customerName.trim())) {
+      toast.error("El nombre solo puede contener letras");
+      return;
+    }
     if (!selectedProtein && !selectedSpecial) {
       toast.error("Selecciona una proteína o un especial");
       return;
@@ -119,7 +123,15 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="name">Nombre *</Label>
-            <Input id="name" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Tu nombre" />
+            <Input
+              id="name"
+              value={customerName}
+              onChange={e => {
+                const onlyLetters = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "");
+                setCustomerName(onlyLetters);
+              }}
+              placeholder="Tu nombre"
+            />
           </div>
         </CardContent>
       </Card>
