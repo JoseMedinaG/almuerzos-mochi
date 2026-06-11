@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { createOrder } from "@/lib/supabase-helpers";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { UtensilsCrossed, Soup, Salad, Star, Send, Banknote, Smartphone } from "lucide-react";
 
