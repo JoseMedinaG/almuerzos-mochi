@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +36,18 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
   const [paymentMethod, setPaymentMethod] = useState<"efectivo" | "nequi">("efectivo");
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [existingNames, setExistingNames] = useState<string[]>([]);
+  const [nameError, setNameError] = useState("");
+
+  const normalizeName = (n: string) => n.toLowerCase().replace(/\s+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  useEffect(() => {
+    let active = true;
+    supabase.from("orders").select("customer_name").eq("menu_id", menuId).then(({ data }) => {
+      if (active && data) setExistingNames(data.map((o: any) => normalizeName(o.customer_name)));
+    });
+    return () => { active = false; };
+  }, [menuId]);
 
   const proteins = useMemo(() => items.filter(i => i.type === "proteina"), [items]);
   const sides = useMemo(() => items.filter(i => i.type === "principio"), [items]);
@@ -53,8 +65,6 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
 
   const isSpecialOrder = !!selectedSpecial;
 
-  const normalizeName = (n: string) => n.toLowerCase().replace(/\s+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName.trim()) {
@@ -65,22 +75,16 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
       toast.error("El nombre solo puede contener letras");
       return;
     }
+    if (nameError || existingNames.includes(normalizeName(customerName))) {
+      toast.error("Ya existe un pedido con ese nombre. Usa un nombre diferente.");
+      return;
+    }
     if (!selectedProtein && !selectedSpecial) {
       toast.error("Selecciona una proteína o un especial");
       return;
     }
     if (paymentMethod === "nequi" && !customerPhone.trim()) {
       toast.error("Para pago por Nequi debes ingresar tu número de teléfono");
-      return;
-    }
-    // Check duplicate name in this menu
-    const { data: existing } = await supabase
-      .from("orders")
-      .select("customer_name")
-      .eq("menu_id", menuId);
-    const target = normalizeName(customerName);
-    if (existing?.some((o: any) => normalizeName(o.customer_name) === target)) {
-      toast.error("Ya existe un pedido con ese nombre. Usa un nombre diferente (por ejemplo agrega tu apellido).");
       return;
     }
     setShowConfirm(true);
@@ -142,9 +146,17 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
               onChange={e => {
                 const onlyLetters = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "");
                 setCustomerName(onlyLetters);
+                if (onlyLetters.trim() && existingNames.includes(normalizeName(onlyLetters))) {
+                  setNameError("Ya existe un pedido con ese nombre. Usa un nombre diferente (por ejemplo agrega tu apellido).");
+                } else {
+                  setNameError("");
+                }
               }}
               placeholder="Tu nombre"
+              aria-invalid={!!nameError}
+              className={nameError ? "border-destructive focus-visible:ring-destructive" : ""}
             />
+            {nameError && <p className="text-sm text-destructive mt-1">{nameError}</p>}
           </div>
         </CardContent>
       </Card>
