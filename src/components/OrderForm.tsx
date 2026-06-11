@@ -65,8 +65,6 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
 
   const isSpecialOrder = !!selectedSpecial;
 
-  const normalizeName = (n: string) => n.toLowerCase().replace(/\s+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName.trim()) {
@@ -77,22 +75,16 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
       toast.error("El nombre solo puede contener letras");
       return;
     }
+    if (nameError || existingNames.includes(normalizeName(customerName))) {
+      toast.error("Ya existe un pedido con ese nombre. Usa un nombre diferente.");
+      return;
+    }
     if (!selectedProtein && !selectedSpecial) {
       toast.error("Selecciona una proteína o un especial");
       return;
     }
     if (paymentMethod === "nequi" && !customerPhone.trim()) {
       toast.error("Para pago por Nequi debes ingresar tu número de teléfono");
-      return;
-    }
-    // Check duplicate name in this menu
-    const { data: existing } = await supabase
-      .from("orders")
-      .select("customer_name")
-      .eq("menu_id", menuId);
-    const target = normalizeName(customerName);
-    if (existing?.some((o: any) => normalizeName(o.customer_name) === target)) {
-      toast.error("Ya existe un pedido con ese nombre. Usa un nombre diferente (por ejemplo agrega tu apellido).");
       return;
     }
     setShowConfirm(true);
