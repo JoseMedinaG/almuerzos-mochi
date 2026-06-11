@@ -36,6 +36,18 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
   const [paymentMethod, setPaymentMethod] = useState<"efectivo" | "nequi">("efectivo");
   const [submitting, setSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [existingNames, setExistingNames] = useState<string[]>([]);
+  const [nameError, setNameError] = useState("");
+
+  const normalizeName = (n: string) => n.toLowerCase().replace(/\s+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  useEffect(() => {
+    let active = true;
+    supabase.from("orders").select("customer_name").eq("menu_id", menuId).then(({ data }) => {
+      if (active && data) setExistingNames(data.map((o: any) => normalizeName(o.customer_name)));
+    });
+    return () => { active = false; };
+  }, [menuId]);
 
   const proteins = useMemo(() => items.filter(i => i.type === "proteina"), [items]);
   const sides = useMemo(() => items.filter(i => i.type === "principio"), [items]);
