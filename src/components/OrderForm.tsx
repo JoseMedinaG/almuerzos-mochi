@@ -39,7 +39,8 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
   const [existingNames, setExistingNames] = useState<string[]>([]);
   const [nameError, setNameError] = useState("");
 
-  const normalizeName = (n: string) => n.toLowerCase().replace(/\s+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const stripInvisible = (n: string) => n.replace(/[\u200B-\u200D\uFEFF\u2060\u00AD]/g, "");
+  const normalizeName = (n: string) => stripInvisible(n).toLowerCase().replace(/\s+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
   useEffect(() => {
     let active = true;
@@ -144,7 +145,8 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
               id="name"
               value={customerName}
               onChange={e => {
-                const onlyLetters = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "");
+                const cleaned = stripInvisible(e.target.value);
+                const onlyLetters = cleaned.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "");
                 setCustomerName(onlyLetters);
                 if (onlyLetters.trim() && existingNames.includes(normalizeName(onlyLetters))) {
                   setNameError("Ya existe un pedido con ese nombre. Usa un nombre diferente (por ejemplo agrega tu apellido).");
