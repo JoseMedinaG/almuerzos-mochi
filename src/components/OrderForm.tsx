@@ -145,7 +145,8 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
               id="name"
               value={customerName}
               onChange={e => {
-                const onlyLetters = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "");
+                const cleaned = stripInvisible(e.target.value);
+                const onlyLetters = cleaned.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "");
                 setCustomerName(onlyLetters);
                 if (onlyLetters.trim() && existingNames.includes(normalizeName(onlyLetters))) {
                   setNameError("Ya existe un pedido con ese nombre. Usa un nombre diferente (por ejemplo agrega tu apellido).");
