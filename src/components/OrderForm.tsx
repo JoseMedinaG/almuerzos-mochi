@@ -384,7 +384,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
               <div className="space-y-3">
                 <p>Revisa tu pedido antes de enviarlo:</p>
                 <div className="bg-secondary/30 rounded-lg p-4 text-sm space-y-1 text-foreground">
-                  <p><span className="font-medium">Nombre:</span> {customerName}</p>
+                  <p><span className="font-medium">Nombre:</span> {customerName ? formatName(customerName) : '-'}</p>
                   {customerPhone && <p><span className="font-medium">Teléfono:</span> {customerPhone}</p>}
                   {isSpecialOrder ? (
                     <p><span className="font-medium">Especial:</span> ⭐ {specials.find(s => s.id === selectedSpecial)?.name}</p>
