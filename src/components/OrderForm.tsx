@@ -142,23 +142,27 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="name">Nombre *</Label>
-            <Input
-              id="name"
+            <Select
               value={customerName}
-              onChange={e => {
-                const cleaned = stripInvisible(e.target.value);
-                const onlyLetters = cleaned.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "");
-                setCustomerName(onlyLetters);
-                if (onlyLetters.trim() && existingNames.includes(normalizeName(onlyLetters))) {
-                  setNameError("Ya existe un pedido con ese nombre. Usa un nombre diferente (por ejemplo agrega tu apellido).");
+              onValueChange={val => {
+                const cleaned = stripInvisible(val);
+                setCustomerName(cleaned);
+                if (cleaned.trim() && existingNames.includes(normalizeName(cleaned))) {
+                  setNameError("Ya existe un pedido con ese nombre. Selecciona un nombre diferente.");
                 } else {
                   setNameError("");
                 }
               }}
-              placeholder="Tu nombre"
-              aria-invalid={!!nameError}
-              className={nameError ? "border-destructive focus-visible:ring-destructive" : ""}
-            />
+            >
+              <SelectTrigger id="name" aria-invalid={!!nameError} className={nameError ? "border-destructive focus:ring-destructive" : ""}>
+                <SelectValue placeholder="Selecciona tu nombre" />
+              </SelectTrigger>
+              <SelectContent>
+                {NAMES.map(name => (
+                  <SelectItem key={name} value={name}>{formatName(name)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {nameError && <p className="text-sm text-destructive mt-1">{nameError}</p>}
           </div>
         </CardContent>
