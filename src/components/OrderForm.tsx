@@ -25,6 +25,19 @@ interface OrderFormProps {
   onOrderPlaced: () => void;
 }
 
+const NAMES = [
+  "brayan", "daniela", "lis", "whitman", "estrella", "willson", "sebastian",
+  "fabian", "lucero", "silvia", "oscar", "david", "carlos M", "carlos C",
+  "jose", "miguel", "edgar", "cesar", "liliana", "jeffer", "diana", "adriana",
+];
+
+const formatName = (name: string) => {
+  return name
+    .split(" ")
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+};
+
 export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormProps) {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
