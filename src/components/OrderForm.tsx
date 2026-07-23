@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { createOrder } from "@/lib/supabase-helpers";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +24,19 @@ interface OrderFormProps {
   items: MenuItem[];
   onOrderPlaced: () => void;
 }
+
+const NAMES = [
+  "brayan", "daniela", "lis", "whitman", "estrella", "willson", "sebastian",
+  "fabian", "lucero", "silvia", "oscar", "david", "carlos M", "carlos C",
+  "jose", "miguel", "edgar", "cesar", "liliana", "jeffer", "diana", "adriana",
+];
+
+const formatName = (name: string) => {
+  return name
+    .split(" ")
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(" ");
+};
 
 export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormProps) {
   const [customerName, setCustomerName] = useState("");
@@ -141,23 +155,27 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="name">Nombre *</Label>
-            <Input
-              id="name"
+            <Select
               value={customerName}
-              onChange={e => {
-                const cleaned = stripInvisible(e.target.value);
-                const onlyLetters = cleaned.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "");
-                setCustomerName(onlyLetters);
-                if (onlyLetters.trim() && existingNames.includes(normalizeName(onlyLetters))) {
-                  setNameError("Ya existe un pedido con ese nombre. Usa un nombre diferente (por ejemplo agrega tu apellido).");
+              onValueChange={val => {
+                const cleaned = stripInvisible(val);
+                setCustomerName(cleaned);
+                if (cleaned.trim() && existingNames.includes(normalizeName(cleaned))) {
+                  setNameError("Ya existe un pedido con ese nombre. Selecciona un nombre diferente.");
                 } else {
                   setNameError("");
                 }
               }}
-              placeholder="Tu nombre"
-              aria-invalid={!!nameError}
-              className={nameError ? "border-destructive focus-visible:ring-destructive" : ""}
-            />
+            >
+              <SelectTrigger id="name" aria-invalid={!!nameError} className={nameError ? "border-destructive focus:ring-destructive" : ""}>
+                <SelectValue placeholder="Selecciona tu nombre" />
+              </SelectTrigger>
+              <SelectContent>
+                {NAMES.map(name => (
+                  <SelectItem key={name} value={name}>{formatName(name)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             {nameError && <p className="text-sm text-destructive mt-1">{nameError}</p>}
           </div>
         </CardContent>
@@ -366,7 +384,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
               <div className="space-y-3">
                 <p>Revisa tu pedido antes de enviarlo:</p>
                 <div className="bg-secondary/30 rounded-lg p-4 text-sm space-y-1 text-foreground">
-                  <p><span className="font-medium">Nombre:</span> {customerName}</p>
+                  <p><span className="font-medium">Nombre:</span> {customerName ? formatName(customerName) : '-'}</p>
                   {customerPhone && <p><span className="font-medium">Teléfono:</span> {customerPhone}</p>}
                   {isSpecialOrder ? (
                     <p><span className="font-medium">Especial:</span> ⭐ {specials.find(s => s.id === selectedSpecial)?.name}</p>
