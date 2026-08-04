@@ -2,3 +2,5 @@ project_id = "tkxhxyfpbthhuagaqrlt"
 
 [functions.push-notifications]
 verify_jwt = false
+[functions.late-order-raffle]
+verify_jwt = false
