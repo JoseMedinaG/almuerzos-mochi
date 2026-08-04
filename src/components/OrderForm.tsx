@@ -26,15 +26,15 @@ interface OrderFormProps {
 }
 
 const NAMES = [
-  "brayan", "daniela", "lis", "whitman", "estrella", "willson", "sebastian",
-  "fabian", "lucero", "silvia", "oscar", "david", "carlos M", "carlos C",
-  "jose", "miguel", "edgar", "cesar", "liliana", "jeffer", "diana", "adriana",
+  "Brayan", "Daniela", "Lis", "Whitman", "Estrella", "Wilson", "Sebastian",
+  "Fabian", "Lucero", "Silvia", "Oscar", "David", "Carlos M", "Carlos C",
+  "Jose", "Miguel", "Edgar", "Cesar", "Liliana", "Jeffer", "Diana", "Adriana",
 ];
 
 const formatName = (name: string) => {
   return name
     .split(" ")
-    .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 };
 
@@ -109,7 +109,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
     setShowConfirm(false);
     setSubmitting(true);
     try {
-      await createOrder({
+      const newOrder = await createOrder({
         menu_id: menuId,
         customer_name: customerName.trim(),
         customer_phone: customerPhone.trim() || undefined,
@@ -124,6 +124,14 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
         payment_method: paymentMethod,
       });
       toast.success("¡Pedido realizado con éxito!");
+
+      // If the day's raffles already ran, trigger a re-raffle including this late order
+      try {
+        await supabase.functions.invoke("late-order-raffle", { body: { orderId: newOrder.id } });
+      } catch {
+        // best-effort
+      }
+
       setCustomerName("");
       setCustomerPhone("");
       setSelectedProtein("");
