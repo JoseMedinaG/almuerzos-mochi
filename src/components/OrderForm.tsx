@@ -109,7 +109,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
     setShowConfirm(false);
     setSubmitting(true);
     try {
-      await createOrder({
+      const newOrder = await createOrder({
         menu_id: menuId,
         customer_name: customerName.trim(),
         customer_phone: customerPhone.trim() || undefined,
@@ -124,6 +124,14 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
         payment_method: paymentMethod,
       });
       toast.success("¡Pedido realizado con éxito!");
+
+      // If the day's raffles already ran, trigger a re-raffle including this late order
+      try {
+        await supabase.functions.invoke("late-order-raffle", { body: { orderId: newOrder.id } });
+      } catch {
+        // best-effort
+      }
+
       setCustomerName("");
       setCustomerPhone("");
       setSelectedProtein("");
