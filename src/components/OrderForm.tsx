@@ -29,6 +29,7 @@ const NAMES = [
   "Brayan", "Daniela", "Lis", "Whitman", "Estrella", "Wilson", "Sebastian",
   "Fabian", "Lucero", "Silvia", "Oscar", "David", "Carlos M", "Carlos C",
   "Jose", "Miguel", "Edgar", "Cesar", "Liliana", "Jeffer", "Diana", "Adriana",
+  "Rafael",
 ];
 
 const formatName = (name: string) => {
