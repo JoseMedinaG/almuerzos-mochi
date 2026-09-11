@@ -90,7 +90,7 @@ const Index = () => {
         <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 rounded-xl px-4 py-3 text-sm">
           <Smartphone className="h-5 w-5 text-primary shrink-0" />
           <p className="text-foreground flex-1">
-            <span className="font-semibold">Nequi:</span> 3115286160 — <span className="font-medium">Alba Espinoza</span>
+            <span className="font-semibold">Nequi:</span> 3144686019 — <span className="font-medium">Jose Guarguati</span>
           </p>
           <Dialog>
             <DialogTrigger asChild>
