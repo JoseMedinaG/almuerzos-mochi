@@ -29,7 +29,7 @@ const NAMES = [
   "Brayan", "Daniela", "Lis", "Whitman", "Estrella", "Wilson", "Sebastian",
   "Fabian", "Lucero", "Silvia", "Oscar", "Oscar S", "David", "Carlos M", "Carlos C",
   "Jose", "Miguel", "Edgar", "Cesar", "Liliana", "Jeffer", "Diana", "Adriana",
-  "Rafael", "Paola", "Giovani", "Camilo",
+  "Rafael", "Paola", "Giovani", "Camilo", "Invitado",
 ];
 
 const formatName = (name: string) => {
@@ -41,6 +41,7 @@ const formatName = (name: string) => {
 
 export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormProps) {
   const [customerName, setCustomerName] = useState("");
+  const [guestName, setGuestName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [selectedProtein, setSelectedProtein] = useState("");
   const [selectedSide, setSelectedSide] = useState("none");
@@ -56,6 +57,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
 
   const stripInvisible = (n: string) => n.replace(/[\u200B-\u200D\uFEFF\u2060\u00AD]/g, "");
   const normalizeName = (n: string) => stripInvisible(n).toLowerCase().replace(/\s+/g, "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const effectiveName = customerName === "Invitado" ? guestName.trim() : customerName;
 
   useEffect(() => {
     let active = true;
@@ -83,15 +85,15 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customerName.trim()) {
-      toast.error("Por favor ingresa tu nombre");
+    if (!effectiveName.trim()) {
+      toast.error(customerName === "Invitado" ? "Por favor ingresa el nombre del invitado" : "Por favor ingresa tu nombre");
       return;
     }
-    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(customerName.trim())) {
+    if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(effectiveName.trim())) {
       toast.error("El nombre solo puede contener letras");
       return;
     }
-    if (nameError || existingNames.includes(normalizeName(customerName))) {
+    if (nameError || existingNames.includes(normalizeName(effectiveName))) {
       toast.error("Ya existe un pedido con ese nombre. Usa un nombre diferente.");
       return;
     }
@@ -112,7 +114,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
     try {
       const newOrder = await createOrder({
         menu_id: menuId,
-        customer_name: customerName.trim(),
+        customer_name: effectiveName.trim(),
         customer_phone: customerPhone.trim() || undefined,
         protein_id: isSpecialOrder ? undefined : selectedProtein || undefined,
         side_id: isSpecialOrder ? undefined : (selectedSide !== "none" ? selectedSide : undefined),
@@ -134,6 +136,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
       }
 
       setCustomerName("");
+      setGuestName("");
       setCustomerPhone("");
       setSelectedProtein("");
       setSelectedSide("none");
@@ -169,7 +172,10 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
               onValueChange={val => {
                 const cleaned = stripInvisible(val);
                 setCustomerName(cleaned);
-                if (cleaned.trim() && existingNames.includes(normalizeName(cleaned))) {
+                if (cleaned === "Invitado") {
+                  setNameError("");
+                  setGuestName("");
+                } else if (cleaned.trim() && existingNames.includes(normalizeName(cleaned))) {
                   setNameError("Ya existe un pedido con ese nombre. Selecciona un nombre diferente.");
                 } else {
                   setNameError("");
@@ -185,6 +191,12 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
                 ))}
               </SelectContent>
             </Select>
+            {customerName === "Invitado" && (
+              <div className="mt-3">
+                <Label htmlFor="guest-name">Nombre del invitado *</Label>
+                <Input id="guest-name" value={guestName} onChange={e => setGuestName(e.target.value)} placeholder="Escribe el nombre" className="mt-1" />
+              </div>
+            )}
             {nameError && <p className="text-sm text-destructive mt-1">{nameError}</p>}
           </div>
         </CardContent>
@@ -393,7 +405,7 @@ export default function OrderForm({ menuId, items, onOrderPlaced }: OrderFormPro
               <div className="space-y-3">
                 <p>Revisa tu pedido antes de enviarlo:</p>
                 <div className="bg-secondary/30 rounded-lg p-4 text-sm space-y-1 text-foreground">
-                  <p><span className="font-medium">Nombre:</span> {customerName ? formatName(customerName) : '-'}</p>
+                  <p><span className="font-medium">Nombre:</span> {effectiveName ? formatName(effectiveName) : '-'}</p>
                   {customerPhone && <p><span className="font-medium">Teléfono:</span> {customerPhone}</p>}
                   {isSpecialOrder ? (
                     <p><span className="font-medium">Especial:</span> ⭐ {specials.find(s => s.id === selectedSpecial)?.name}</p>
