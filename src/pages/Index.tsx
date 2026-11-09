@@ -11,9 +11,11 @@ import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import PublicOrdersView from "@/components/PublicOrdersView";
+import RecentOrdersView from "@/components/RecentOrdersView";
 
 const Index = () => {
   const [orderKey, setOrderKey] = useState(0);
+  const [showHistory, setShowHistory] = useState(false);
   const { isSubscribed, isSupported, subscribe } = usePushNotifications();
   const { data: menu, isLoading: menuLoading } = useQuery({
     queryKey: ['todayMenu'],
@@ -126,10 +128,32 @@ const Index = () => {
 
       <footer className="fixed bottom-4 right-4 flex items-center gap-2">
         <ThemeToggle />
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={!menu?.id}
+          onClick={() => setShowHistory(true)}
+          className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 h-8 px-2"
+        >
+          Ver histórico
+        </Button>
         <Link to="/admin" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
           <ShieldCheck className="h-3 w-3" /> Admin
         </Link>
       </footer>
+
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Historial de pedidos</DialogTitle>
+          </DialogHeader>
+          {menu?.id ? (
+            <RecentOrdersView menuId={menu.id} />
+          ) : (
+            <p className="text-muted-foreground">No hay menú disponible para hoy.</p>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

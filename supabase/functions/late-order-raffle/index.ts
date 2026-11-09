@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     const { data: configs } = await supabaseAdmin
       .from("app_config")
       .select("key, value")
-      .in("key", ["nequi_raffle_winner", "pickup_winners", "pickup_raffle_history"]);
+      .in("key", ["nequi_raffle_winner", "pickup_winners", "pickup_raffle_history", "nequi_raffle_history"]);
 
     const nequiCfg = configs?.find((c) => c.key === "nequi_raffle_winner")?.value as
       | { name: string; phone?: string; date?: string }
@@ -53,6 +53,9 @@ Deno.serve(async (req) => {
       | undefined;
     const pickupHistory = configs?.find((c) => c.key === "pickup_raffle_history")?.value as
       | { wins?: { name: string; date: string }[] }
+      | undefined;
+    const nequiHistory = configs?.find((c) => c.key === "nequi_raffle_history")?.value as
+      | { wins?: { name: string; phone?: string; date: string }[] }
       | undefined;
 
     const messages: string[] = [];
@@ -115,6 +118,17 @@ Deno.serve(async (req) => {
           { key: "nequi_raffle_winner", value: { name: winner.name, phone: winner.phone, date: menuDate } },
           { onConflict: "key" }
         );
+
+      // Actualizar historial de responsables Nequi
+      const cutoffN = new Date(menuDate + "T00:00:00");
+      cutoffN.setDate(cutoffN.getDate() - 56);
+      const prunedN = (nequiHistory?.wins ?? [])
+        .filter((w) => w.date !== menuDate)
+        .filter((w) => new Date(w.date + "T00:00:00") >= cutoffN);
+      const newWinsN = [...prunedN, { name: winner.name, phone: winner.phone ?? undefined, date: menuDate }];
+      await supabaseAdmin
+        .from("app_config")
+        .upsert({ key: "nequi_raffle_history", value: { wins: newWinsN } }, { onConflict: "key" });
 
       result.nequiWinner = winner.name;
       messages.push(`Nuevo sorteo Nequi por pedido tardío: paga ${winner.name}.`);

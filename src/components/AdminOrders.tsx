@@ -213,6 +213,19 @@ export default function AdminOrders() {
     },
   });
 
+  // Historial de responsables Nequi
+  const { data: nequiHistory } = useQuery({
+    queryKey: ['nequiRaffleHistory'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('app_config')
+        .select('value')
+        .eq('key', 'nequi_raffle_history')
+        .maybeSingle();
+      return (data?.value as { wins?: { name: string; phone?: string; date: string }[] } | null) ?? { wins: [] };
+    },
+  });
+
   const handleNequiRaffle = () => {
     if (!nequiOrders.length) return;
     setShowNequiRaffle(true);
@@ -245,8 +258,21 @@ export default function AdminOrders() {
       await supabase
         .from('app_config')
         .upsert({ key: 'nequi_raffle_winner', value: { name: winner, phone: winnerOrder.customer_phone, date: selectedDate } as any }, { onConflict: 'key' });
+
+      // Actualizar historial de responsables Nequi (últimos días)
+      const cutoff = new Date(selectedDate + "T00:00:00");
+      cutoff.setDate(cutoff.getDate() - 56);
+      const pruned = (nequiHistory?.wins ?? [])
+        .filter((w) => w.date !== selectedDate)
+        .filter((w) => new Date(w.date + "T00:00:00") >= cutoff);
+      const newWins = [...pruned, { name: winner, phone: winnerOrder.customer_phone, date: selectedDate }];
+      await supabase
+        .from('app_config')
+        .upsert({ key: 'nequi_raffle_history', value: { wins: newWins } as any }, { onConflict: 'key' });
+
       queryClient.invalidateQueries({ queryKey: ['raffleWinner'] });
       queryClient.invalidateQueries({ queryKey: ['previousRaffleWinner'] });
+      queryClient.invalidateQueries({ queryKey: ['nequiRaffleHistory'] });
 
       // Send push notification to inform Nequi payers
       try {
