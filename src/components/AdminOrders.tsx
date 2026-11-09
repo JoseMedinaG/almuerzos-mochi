@@ -82,6 +82,7 @@ export default function AdminOrders() {
   const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
   const [nequiWinner, setNequiWinner] = useState<string | null>(null);
   const [showNequiRaffle, setShowNequiRaffle] = useState(false);
+  const [showNequiHistory, setShowNequiHistory] = useState(false);
   const [isRaffling, setIsRaffling] = useState(false);
   const [pickupWinners, setPickupWinners] = useState<string[]>([]);
   const [showPickupRaffle, setShowPickupRaffle] = useState(false);
@@ -466,6 +467,13 @@ export default function AdminOrders() {
                     <Shuffle className="h-4 w-4" /> Sorteo Nequi
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  onClick={() => setShowNequiHistory(true)}
+                  className="gap-2 self-center border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-purple-950"
+                >
+                  <Smartphone className="h-4 w-4" /> Histórico Nequi
+                </Button>
                 {orders && orders.length > 0 && (
                   <Button
                     variant="outline"
@@ -605,6 +613,46 @@ export default function AdminOrders() {
           </div>
         </DialogContent>
       </Dialog>
+      <Dialog open={showNequiHistory} onOpenChange={setShowNequiHistory}>
+        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5 text-purple-600" /> Histórico Responsables Nequi
+            </DialogTitle>
+            <DialogDescription>Últimos responsables seleccionados para cobrar Nequi</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            {!(nequiHistory?.wins?.length) && (
+              <p className="text-center text-muted-foreground py-4">No hay responsables Nequi registrados.</p>
+            )}
+            {(nequiHistory?.wins ?? [])
+              .slice()
+              .sort((a, b) => (a.date < b.date ? 1 : -1))
+              .map((w, i) => (
+                <div key={i} className="rounded-lg border bg-card p-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-foreground truncate">{w.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(w.date + "T00:00:00").toLocaleDateString("es-CO", {
+                        weekday: "short",
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge className="text-white border-transparent text-xs" style={{ backgroundColor: "#C8007C" }}>
+                      Nequi
+                    </Badge>
+                    {w.phone && <span className="text-xs text-muted-foreground">📱 {w.phone}</span>}
+                  </div>
+                </div>
+              ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showPickupRaffle} onOpenChange={setShowPickupRaffle}>
         <DialogContent className="max-w-sm text-center">
           <DialogHeader>
