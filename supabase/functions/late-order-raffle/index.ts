@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     const { data: configs } = await supabaseAdmin
       .from("app_config")
       .select("key, value")
-      .in("key", ["nequi_raffle_winner", "pickup_winners"]);
+      .in("key", ["nequi_raffle_winner", "pickup_winners", "pickup_raffle_history"]);
 
     const nequiCfg = configs?.find((c) => c.key === "nequi_raffle_winner")?.value as
       | { name: string; phone?: string; date?: string }
@@ -51,13 +51,30 @@ Deno.serve(async (req) => {
     const pickupCfg = configs?.find((c) => c.key === "pickup_winners")?.value as
       | { names: string[]; date?: string }
       | undefined;
+    const pickupHistory = configs?.find((c) => c.key === "pickup_raffle_history")?.value as
+      | { wins?: { name: string; date: string }[] }
+      | undefined;
 
     const messages: string[] = [];
     const result: Record<string, unknown> = {};
 
     // --- Pickup re-raffle: only current pickup winners + the new person ---
     if (pickupCfg?.date === menuDate && pickupCfg.names?.length) {
-      const pool = Array.from(new Set([...pickupCfg.names, order.customer_name]));
+      const historyWins = pickupHistory?.wins ?? [];
+      const norm = (s: string) => s.trim().toLowerCase();
+      const yesterday = (() => {
+        const d = new Date(menuDate + "T00:00:00");
+        d.setDate(d.getDate() - 1);
+        return d.toISOString().split("T")[0];
+      })();
+
+      let pool = Array.from(new Set([...pickupCfg.names, order.customer_name]));
+      // Excluir a quien ganó ayer
+      const filtered = pool.filter(
+        (name) => !historyWins.some((w) => norm(w.name) === norm(name) && w.date === yesterday)
+      );
+      if (filtered.length >= pickupCfg.names.length) pool = filtered;
+
       const count = pickupCfg.names.length;
       const shuffled = [...pool].sort(() => Math.random() - 0.5);
       const winners = shuffled.slice(0, count);
@@ -65,6 +82,17 @@ Deno.serve(async (req) => {
       await supabaseAdmin
         .from("app_config")
         .upsert({ key: "pickup_winners", value: { names: winners, date: menuDate } }, { onConflict: "key" });
+
+      // Actualizar historial temporal (reemplazar entradas de hoy)
+      const cutoff = new Date(menuDate + "T00:00:00");
+      cutoff.setDate(cutoff.getDate() - 56);
+      const pruned = historyWins
+        .filter((w) => w.date !== menuDate)
+        .filter((w) => new Date(w.date + "T00:00:00") >= cutoff);
+      const newWins = [...pruned, ...winners.map((name) => ({ name, date: menuDate }))];
+      await supabaseAdmin
+        .from("app_config")
+        .upsert({ key: "pickup_raffle_history", value: { wins: newWins } }, { onConflict: "key" });
 
       result.pickupWinners = winners;
       messages.push(

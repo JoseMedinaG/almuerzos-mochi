@@ -14,6 +14,65 @@ import { Download, ClipboardList, FileText, Copy, Check, Banknote, Smartphone, C
 import { toast } from "sonner";
 import { supabase as supabaseClient } from "@/integrations/supabase/client";
 
+// ---- Helpers para sorteo ponderado de recogida ----
+function normalizeName(n: string) {
+  return n.trim().toLowerCase();
+}
+
+function mondayOfWeek(dateStr: string) {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  return d.toISOString().split("T")[0];
+}
+
+function daysBetween(a: string, b: string) {
+  const da = new Date(a + "T00:00:00").getTime();
+  const db = new Date(b + "T00:00:00").getTime();
+  return Math.round((db - da) / 86400000);
+}
+
+function yesterdayOf(dateStr: string) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().split("T")[0];
+}
+
+function weightFor(name: string, wins: { name: string; date: string }[], today: string) {
+  const mine = wins.filter((w) => normalizeName(w.name) === normalizeName(name));
+  if (mine.length === 0) return 14; // nunca ha ganado
+  const last = mine[mine.length - 1].date;
+  if (last === yesterdayOf(today)) return 0; // excluido el día siguiente
+  if (mondayOfWeek(last) === mondayOfWeek(today)) return 1; // misma semana: probabilidad baja
+  const days = daysBetween(last, today);
+  return Math.min(Math.max(days, 1), 14);
+}
+
+function weightedPick(items: { name: string; weight: number }[], count: number): string[] {
+  const pool = items.map((x) => ({ ...x }));
+  const result: string[] = [];
+  for (let k = 0; k < count && pool.length; k++) {
+    const total = pool.reduce((s, p) => s + p.weight, 0);
+    if (total <= 0) {
+      const idx = Math.floor(Math.random() * pool.length);
+      result.push(pool[idx].name);
+      pool.splice(idx, 1);
+      continue;
+    }
+    let r = Math.random() * total;
+    let idx = 0;
+    for (; idx < pool.length; idx++) {
+      r -= pool[idx].weight;
+      if (r <= 0) break;
+    }
+    if (idx >= pool.length) idx = pool.length - 1;
+    result.push(pool[idx].name);
+    pool.splice(idx, 1);
+  }
+  return result;
+}
+
 export default function AdminOrders() {
   const today = new Date().toISOString().split('T')[0];
   const [showOrderSummary, setShowOrderSummary] = useState(false);
@@ -217,6 +276,19 @@ export default function AdminOrders() {
     },
   });
 
+  // Historial de ganadores de recogida (memoria temporal en servidor)
+  const { data: pickupHistory } = useQuery({
+    queryKey: ['pickupRaffleHistory'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('app_config')
+        .select('value')
+        .eq('key', 'pickup_raffle_history')
+        .maybeSingle();
+      return (data?.value as { wins?: { name: string; date: string }[] } | null) ?? { wins: [] };
+    },
+  });
+
   const handlePickupRaffle = () => {
     if (!orders?.length) return;
     setShowPickupRaffle(true);
@@ -228,12 +300,21 @@ export default function AdminOrders() {
     // Unique customers
     const uniqueNames = Array.from(new Set(orders.map(o => o.customer_name)));
 
-    // Exclude previous winners if possible
-    let eligible = uniqueNames;
-    if (previousPickup?.names?.length && uniqueNames.length > numWinners) {
-      const filtered = uniqueNames.filter(n => !previousPickup.names.includes(n));
-      if (filtered.length >= numWinners) eligible = filtered;
+    // Historial de victorias
+    const historyWins = pickupHistory?.wins ?? [];
+
+    // Peso por candidato (0 = excluido)
+    const weighted = uniqueNames.map((name) => ({
+      name,
+      weight: weightFor(name, historyWins, selectedDate),
+    }));
+    let eligibleWeighted = weighted.filter((w) => w.weight > 0);
+
+    // Fallback si todos quedaron excluidos
+    if (eligibleWeighted.length < numWinners) {
+      eligibleWeighted = uniqueNames.map((name) => ({ name, weight: 1 }));
     }
+    const eligible = eligibleWeighted.map((w) => w.name);
 
     // Animate
     const interval = setInterval(() => {
@@ -243,16 +324,27 @@ export default function AdminOrders() {
 
     setTimeout(async () => {
       clearInterval(interval);
-      const shuffled = [...eligible].sort(() => Math.random() - 0.5);
-      const winners = shuffled.slice(0, numWinners);
+      const winners = weightedPick(eligibleWeighted, numWinners);
       setPickupWinners(winners);
       setIsPickupRaffling(false);
 
       await supabase
         .from('app_config')
         .upsert({ key: 'pickup_winners', value: { names: winners, date: selectedDate } as any }, { onConflict: 'key' });
+
+      // Actualizar historial temporal (quitar entradas de hoy y agregar nuevos ganadores)
+      const cutoff = new Date(selectedDate + "T00:00:00");
+      cutoff.setDate(cutoff.getDate() - 56);
+      const pruned = (historyWins.filter((w) => w.date !== selectedDate))
+        .filter((w) => new Date(w.date + "T00:00:00") >= cutoff);
+      const newWins = [...pruned, ...winners.map((name) => ({ name, date: selectedDate }))];
+      await supabase
+        .from('app_config')
+        .upsert({ key: 'pickup_raffle_history', value: { wins: newWins } as any }, { onConflict: 'key' });
+
       queryClient.invalidateQueries({ queryKey: ['pickupWinners'] });
       queryClient.invalidateQueries({ queryKey: ['previousPickupWinners'] });
+      queryClient.invalidateQueries({ queryKey: ['pickupRaffleHistory'] });
 
       try {
         await supabaseClient.functions.invoke("push-notifications", {
