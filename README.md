@@ -86,14 +86,6 @@ docker logs lunchppy-fn-late-order-raffle --tail 20
 docker exec lunchppy-db pg_dump -U postgres -Fc postgres > backup.dump
 ```
 
-## Build with Lovable
+## Ownership
 
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://almuerzos-mochi.lovable.app
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/f90ba03c-3c52-4214-a5f8-15f641736d5a).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+Este código es tuyo. Desarrolla localmente o en tu editor preferido y haz push a `main` en GitHub.
