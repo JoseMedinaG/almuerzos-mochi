@@ -36,8 +36,9 @@ export default function RecentOrdersView({ menuId }: RecentOrdersViewProps) {
         .select("value")
         .eq("key", "nequi_raffle_history")
         .maybeSingle();
-      const val = data?.value as { wins?: { name: string; phone?: string; date: string }[] } | null;
-      const wins = (val?.wins ?? []).slice().sort((a, b) => (a.date < b.date ? 1 : -1));
+      const val = data?.value;
+      const rawWins = Array.isArray(val) ? val : Array.isArray((val as any)?.wins) ? (val as any).wins : [];
+      const wins = rawWins.slice().sort((a: any, b: any) => (a.date < b.date ? 1 : -1));
       return wins;
     },
     refetchInterval: 15000,
