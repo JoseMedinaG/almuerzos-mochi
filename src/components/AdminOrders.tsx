@@ -264,7 +264,7 @@ export default function AdminOrders() {
       // Guardar en tabla dedicada nequi_raffle_winners (un registro por día)
       await supabase
         .from('nequi_raffle_winners')
-        .upsert({ win_date: selectedDate, name: winner, phone: winnerOrder.customer_phone }, { onConflict: 'win_date' });
+        .upsert({ win_date: selectedDate, name: winner, phone: winnerOrder.customer_phone, amount: totalNequi }, { onConflict: 'win_date' });
 
       // Limpiar a máximo 14 registros
       const { data: oldRows } = await supabase

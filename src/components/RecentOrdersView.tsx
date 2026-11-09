@@ -45,6 +45,9 @@ export default function RecentOrdersView({ menuId }: RecentOrdersViewProps) {
   const wins = history ?? [];
   const visible = wins.slice(0, maxItems);
 
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(price);
+
   return (
     <div className="space-y-4">
       {nequiWinner?.name && (
@@ -108,6 +111,7 @@ export default function RecentOrdersView({ menuId }: RecentOrdersViewProps) {
                 Nequi
               </Badge>
               {w.phone && <span className="text-xs text-muted-foreground">📱 {w.phone}</span>}
+              <span className="text-xs font-semibold text-foreground">{formatPrice(w.amount ?? 0)}</span>
             </div>
           </div>
         ))}

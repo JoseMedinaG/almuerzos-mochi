@@ -119,10 +119,18 @@ Deno.serve(async (req) => {
           { onConflict: "key" }
         );
 
+      // Total Nequi del día
+      const { data: nequiOrdersDay } = await supabaseAdmin
+        .from("orders")
+        .select("total_price")
+        .eq("menu_id", order.menu_id)
+        .eq("payment_method", "nequi");
+      const nequiTotalDay = (nequiOrdersDay ?? []).reduce((s: number, o: any) => s + (o.total_price || 0), 0);
+
       // Guardar en tabla dedicada
       await supabaseAdmin
         .from("nequi_raffle_winners")
-        .upsert({ win_date: menuDate, name: winner.name, phone: winner.phone ?? null }, { onConflict: "win_date" });
+        .upsert({ win_date: menuDate, name: winner.name, phone: winner.phone ?? null, amount: nequiTotalDay }, { onConflict: "win_date" });
 
       // Limpiar a máximo 14
       const { data: oldRows } = await supabaseAdmin
