@@ -261,20 +261,24 @@ export default function AdminOrders() {
         .from('app_config')
         .upsert({ key: 'nequi_raffle_winner', value: { name: winner, phone: winnerOrder.customer_phone, date: selectedDate } as any }, { onConflict: 'key' });
 
-      // Actualizar historial de responsables Nequi (últimos días)
-      const cutoff = new Date(selectedDate + "T00:00:00");
-      cutoff.setDate(cutoff.getDate() - 56);
-      const pruned = (nequiHistory?.wins ?? [])
-        .filter((w) => w.date !== selectedDate)
-        .filter((w) => new Date(w.date + "T00:00:00") >= cutoff);
-      const newWins = [...pruned, { name: winner, phone: winnerOrder.customer_phone, date: selectedDate }];
+      // Guardar en tabla dedicada nequi_raffle_winners (un registro por día)
       await supabase
-        .from('app_config')
-        .upsert({ key: 'nequi_raffle_history', value: { wins: newWins } as any }, { onConflict: 'key' });
+        .from('nequi_raffle_winners')
+        .upsert({ win_date: selectedDate, name: winner, phone: winnerOrder.customer_phone }, { onConflict: 'win_date' });
+
+      // Limpiar a máximo 14 registros
+      const { data: oldRows } = await supabase
+        .from('nequi_raffle_winners')
+        .select('id')
+        .order('win_date', { ascending: false });
+      if (oldRows && oldRows.length > 14) {
+        const toDelete = oldRows.slice(14).map((r: any) => r.id);
+        await supabase.from('nequi_raffle_winners').delete().in('id', toDelete);
+      }
 
       queryClient.invalidateQueries({ queryKey: ['raffleWinner'] });
       queryClient.invalidateQueries({ queryKey: ['previousRaffleWinner'] });
-      queryClient.invalidateQueries({ queryKey: ['nequiRaffleHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['nequiRaffleWinners'] });
 
       // Send push notification to inform Nequi payers
       try {

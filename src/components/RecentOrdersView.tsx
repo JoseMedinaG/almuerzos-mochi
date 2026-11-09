@@ -29,23 +29,18 @@ export default function RecentOrdersView({ menuId }: RecentOrdersViewProps) {
   });
 
   const { data: history, isLoading } = useQuery({
-    queryKey: ["nequiRaffleHistory"],
+    queryKey: ["nequiRaffleWinners"],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("app_config")
-        .select("value")
-        .eq("key", "nequi_raffle_history")
-        .maybeSingle();
-      const val = data?.value;
-      const rawWins = Array.isArray(val) ? val : Array.isArray((val as any)?.wins) ? (val as any).wins : [];
-      const wins = rawWins.slice().sort((a: any, b: any) => (a.date < b.date ? 1 : -1));
-      return wins;
+      const { data, error } = await supabase
+        .from("nequi_raffle_winners")
+        .select("id, win_date, name, phone")
+        .order("win_date", { ascending: false })
+        .limit(14);
+      if (error) return [];
+      return data ?? [];
     },
     refetchInterval: 15000,
   });
-
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 }).format(price);
 
   const wins = history ?? [];
   const visible = wins.slice(0, maxItems);
@@ -95,12 +90,12 @@ export default function RecentOrdersView({ menuId }: RecentOrdersViewProps) {
       )}
 
       <div className="space-y-2">
-        {visible.map((w, i) => (
-          <div key={i} className="rounded-lg border bg-card p-3 flex items-center justify-between gap-3">
+        {visible.map((w: any) => (
+          <div key={w.id} className="rounded-lg border bg-card p-3 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="font-semibold text-foreground truncate">{w.name}</p>
               <p className="text-xs text-muted-foreground">
-                {new Date(w.date + "T00:00:00").toLocaleDateString("es-CO", {
+                {new Date(w.win_date + "T00:00:00").toLocaleDateString("es-CO", {
                   weekday: "short",
                   day: "2-digit",
                   month: "2-digit",

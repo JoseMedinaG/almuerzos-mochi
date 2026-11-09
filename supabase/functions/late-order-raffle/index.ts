@@ -119,16 +119,20 @@ Deno.serve(async (req) => {
           { onConflict: "key" }
         );
 
-      // Actualizar historial de responsables Nequi
-      const cutoffN = new Date(menuDate + "T00:00:00");
-      cutoffN.setDate(cutoffN.getDate() - 56);
-      const prunedN = (nequiHistory?.wins ?? [])
-        .filter((w) => w.date !== menuDate)
-        .filter((w) => new Date(w.date + "T00:00:00") >= cutoffN);
-      const newWinsN = [...prunedN, { name: winner.name, phone: winner.phone ?? undefined, date: menuDate }];
+      // Guardar en tabla dedicada
       await supabaseAdmin
-        .from("app_config")
-        .upsert({ key: "nequi_raffle_history", value: { wins: newWinsN } }, { onConflict: "key" });
+        .from("nequi_raffle_winners")
+        .upsert({ win_date: menuDate, name: winner.name, phone: winner.phone ?? null }, { onConflict: "win_date" });
+
+      // Limpiar a máximo 14
+      const { data: oldRows } = await supabaseAdmin
+        .from("nequi_raffle_winners")
+        .select("id")
+        .order("win_date", { ascending: false });
+      if (oldRows && oldRows.length > 14) {
+        const toDelete = oldRows.slice(14).map((r: any) => r.id);
+        await supabaseAdmin.from("nequi_raffle_winners").delete().in("id", toDelete);
+      }
 
       result.nequiWinner = winner.name;
       messages.push(`Nuevo sorteo Nequi por pedido tardío: paga ${winner.name}.`);
