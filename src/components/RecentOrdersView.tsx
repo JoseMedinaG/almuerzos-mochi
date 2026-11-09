@@ -33,7 +33,7 @@ export default function RecentOrdersView({ menuId }: RecentOrdersViewProps) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("nequi_raffle_winners")
-        .select("id, win_date, name, phone")
+        .select("id, win_date, name, phone, amount")
         .order("win_date", { ascending: false })
         .limit(14);
       if (error) return [];
