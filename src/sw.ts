@@ -9,13 +9,27 @@ self.skipWaiting();
 clientsClaim();
 
 self.addEventListener("push", (event) => {
-  const data = event.data?.json() ?? {
+  let data: { title?: string; body?: string } = {
     title: "lunchppy",
     body: "¡Nuevo menú disponible!",
   };
+  try {
+    if (event.data) {
+      const parsed = event.data.json();
+      if (parsed && typeof parsed === "object") {
+        data = { title: parsed.title ?? data.title, body: parsed.body ?? data.body };
+      }
+    }
+  } catch {
+    try {
+      if (event.data) data.body = event.data.text();
+    } catch {
+      // ignore
+    }
+  }
 
   event.waitUntil(
-    self.registration.showNotification(data.title, {
+    self.registration.showNotification(data.title!, {
       body: data.body,
       icon: "/pwa-192.png",
       badge: "/pwa-192.png",
