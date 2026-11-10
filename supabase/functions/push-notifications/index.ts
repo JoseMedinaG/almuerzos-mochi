@@ -82,26 +82,32 @@ Deno.serve(async (req) => {
       }
 
       const token = authHeader.replace("Bearer ", "");
-      const supabaseUser = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: `Bearer ${token}` } } }
-      );
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const isServiceRole = token === serviceRoleKey;
 
-      const {
-        data: { user },
-      } = await supabaseUser.auth.getUser();
-      if (!user) {
-        return jsonResponse({ error: "Unauthorized" }, 401);
-      }
+      if (!isServiceRole) {
+        const authUrl = Deno.env.get("AUTH_URL") || "http://lunchppy-auth:9999";
+        const userRes = await fetch(`${authUrl}/user`, {
+          headers: {
+            Authorization: authHeader,
+            apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+          },
+        });
+        if (!userRes.ok) {
+          return jsonResponse({ error: "Unauthorized" }, 401);
+        }
+        const user = await userRes.json();
+        if (!user?.id) {
+          return jsonResponse({ error: "Unauthorized" }, 401);
+        }
 
-      // Check admin role
-      const { data: hasAdmin } = await supabaseAdmin.rpc("has_role", {
-        _user_id: user.id,
-        _role: "admin",
-      });
-      if (!hasAdmin) {
-        return jsonResponse({ error: "Forbidden" }, 403);
+        const { data: hasAdmin } = await supabaseAdmin.rpc("has_role", {
+          _user_id: user.id,
+          _role: "admin",
+        });
+        if (!hasAdmin) {
+          return jsonResponse({ error: "Forbidden" }, 403);
+        }
       }
 
       // Get VAPID keys

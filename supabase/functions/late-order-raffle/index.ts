@@ -148,8 +148,15 @@ Deno.serve(async (req) => {
 
     if (messages.length) {
       try {
-        await supabaseAdmin.functions.invoke("push-notifications", {
-          body: { action: "notify", title: "Sorteo actualizado 🎲", body: messages.join(" ") },
+        const pushUrl = Deno.env.get("PUSH_NOTIFICATIONS_URL") || "http://lunchppy-fn-push-notifications:8000";
+        await fetch(pushUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!}`,
+            apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+          },
+          body: JSON.stringify({ action: "notify", title: "Sorteo actualizado 🎲", body: messages.join(" ") }),
         });
       } catch {
         // best-effort
